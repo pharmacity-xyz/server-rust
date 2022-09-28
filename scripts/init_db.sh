@@ -2,6 +2,21 @@
 set -x
 set -eo pipefail
 
+if ! [ -x "$(command -v psql)"]; then
+    echo >&2 "Error psql is not installed."
+    echo >&2 "Use:"
+    echo >&2 "sudo apt-get install postgresql-client"
+    exit 1
+fi
+
+if ! [ -x "$(command -v sqlx)"]; then
+    echo >&2 "Error sqlx is not installed"
+    echo >&2 "Use:"
+    echo >&2 "cargo install sqlx-cli --no-default-features --features native-tls,postgres"
+    echo >&2 "Error sqlx is not installed"
+    exit 1
+fi
+
 # Check if a custom user has been set, otherwise default to 'postgres'
 DB_USER=${POSTGRES_USER:=postgres}
 # Check if a custom password has been set, otherwise default to 'password' 
