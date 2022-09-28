@@ -16,7 +16,7 @@ async fn health_check_works() {
 }
 
 async fn spawn_app() {
-    let address = "127.0.0.1:8000";
+    let address = "127.0.0.1:0";
     let server = pharmacity::run(address).expect("Failed to bind address"); 
     let _ = tokio::spawn(server);
 }
