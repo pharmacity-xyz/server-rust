@@ -22,5 +22,5 @@ async fn health_check_works() {
 }
 
 async fn spawn_app() -> std::io::Result<()> {
-    todo!()
+    pharmacity::run().await 
 }
