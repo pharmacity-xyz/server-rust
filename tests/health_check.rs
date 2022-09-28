@@ -7,8 +7,7 @@ fn dummy_test() {
 
 #[tokio::test]
 async fn health_check_works() {
-    spawn_app().await.expect("Failed to spawn app.");
-
+    spawn_app();
     let client = reqwest::Client::new();
 
     let response = client
@@ -21,6 +20,7 @@ async fn health_check_works() {
     assert_eq!(Some(0), response.content_length());
 }
 
-async fn spawn_app() -> std::io::Result<()> {
-    pharmacity::run().await 
+async fn spawn_app() {
+    let server = pharmacity::run().expect("Failed to bind address"); 
+    let _ = tokio::spawn(server);
 }
