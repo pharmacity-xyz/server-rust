@@ -1,4 +1,4 @@
-use pharmacity::run;
+use pharmacity::startup::run;
 use std::net::TcpListener;
 
 #[tokio::main]
