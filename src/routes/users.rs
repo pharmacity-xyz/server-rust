@@ -1,5 +1,5 @@
 use actix_web::{web, HttpResponse};
-use sqlx::PgConnection;
+use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
@@ -11,8 +11,8 @@ pub struct User {
     password: String,
 }
 
-pub async fn post_user(user: web::Json<User>, connection: web::Data<PgConnection>) -> HttpResponse {
-    sqlx::query!(
+pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
+    match sqlx::query!(
         r#"
         INSERT INTO users (id, name, address, phonenumber, email, password)
         VALUES ($1, $2, $3, $4, $5, $6)
@@ -24,7 +24,13 @@ pub async fn post_user(user: web::Json<User>, connection: web::Data<PgConnection
         user.email,
         user.password
     )
-    .execute(connection.get_ref())
-    .await;
-    HttpResponse::Ok().finish()
+    .execute(pool.get_ref())
+    .await
+    {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(e) => {
+            println!("Failed to execute query: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
 }
