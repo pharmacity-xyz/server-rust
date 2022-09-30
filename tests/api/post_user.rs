@@ -9,7 +9,7 @@ async fn post_user_returns_a_200_for_valid() {
     let app_address = spawn_app();
     let configuration = get_configuration().expect("Failed to read configuration");
     let connection_string = configuration.database.connection_string();
-    let connection = PgConnection::connect(&connection_string)
+    let mut connection = PgConnection::connect(&connection_string)
         .await
         .expect("Failed to connect to Postgres.");
     let client = reqwest::Client::new();
@@ -28,7 +28,15 @@ async fn post_user_returns_a_200_for_valid() {
         .await
         .expect("Failed to post user.");
 
+    // Assert
     assert_eq!(200, response.status().as_u16());
+
+    let saved = sqlx::query!("SELECT id, name, address, phonenumber, email, password FROM users")
+        .fetch_one(&mut connection)
+        .await
+        .expect("Failed to fetch saved users");
+
+    assert_eq!(saved.name, "Tom");
 }
 
 #[tokio::test]
