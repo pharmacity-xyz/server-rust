@@ -9,7 +9,7 @@ pub struct User {
     password: String,
 }
 
-pub async fn post_user(user: web::Json<User>) -> HttpResponse {
+pub async fn post_user(_user: web::Json<User>) -> HttpResponse {
 
     HttpResponse::Ok().finish()
 }
