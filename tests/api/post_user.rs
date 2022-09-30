@@ -1,11 +1,17 @@
-use std::collections::HashMap;
-
 use crate::helpers::spawn_app;
+use pharmacity::configuration::get_configuration;
+use sqlx::{Connection, PgConnection};
+use std::collections::HashMap;
 
 #[tokio::test]
 async fn post_user_returns_a_200_for_valid() {
     // Arrange
     let app_address = spawn_app();
+    let configuration = get_configuration().expect("Failed to read configuration");
+    let connection_string = configuration.database.connection_string();
+    let connection = PgConnection::connect(&connection_string)
+        .await
+        .expect("Failed to connect to Postgres.");
     let client = reqwest::Client::new();
 
     // Act
