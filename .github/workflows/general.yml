@@ -55,7 +55,7 @@ jobs:
           args: >
             sqlx-cli
             --no-default-features
-            --features native-tls,postgres
+            --features=${{ env.SQLX_FEATURES }}
 
       - name: Migrate database
         run: |
