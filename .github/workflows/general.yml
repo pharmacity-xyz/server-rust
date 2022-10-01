@@ -54,6 +54,8 @@ jobs:
           command: install
           args: >
             sqlx-cli
+            --no-default-features
+            --features native-tls,postgres
 
       - name: Migrate database
         run: |
