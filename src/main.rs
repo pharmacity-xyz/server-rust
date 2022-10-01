@@ -1,6 +1,6 @@
 use pharmacity::configuration::get_configuration;
 use pharmacity::startup::run;
-use sqlx::{Connection, PgConnection, PgPool};
+use sqlx::PgPool;
 use std::net::TcpListener;
 
 #[tokio::main]

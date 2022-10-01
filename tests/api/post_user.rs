@@ -1,17 +1,10 @@
 use crate::helpers::spawn_app;
-use pharmacity::configuration::get_configuration;
-use sqlx::{Connection, PgConnection};
 use std::collections::HashMap;
 
 #[tokio::test]
 async fn post_user_returns_a_200_for_valid() {
     // Arrange
-    let app_address = spawn_app();
-    let configuration = get_configuration().expect("Failed to read configuration");
-    let connection_string = configuration.database.connection_string();
-    let mut connection = PgConnection::connect(&connection_string)
-        .await
-        .expect("Failed to connect to Postgres.");
+    let app = spawn_app().await;
     let client = reqwest::Client::new();
 
     // Act
@@ -22,7 +15,7 @@ async fn post_user_returns_a_200_for_valid() {
     map.insert("email", "tokyo@gmail.com");
     map.insert("password", "password");
     let response = client
-        .post(&format!("{}/user", &app_address))
+        .post(&format!("{}/user", &app.address))
         .json(&map)
         .send()
         .await
@@ -32,17 +25,21 @@ async fn post_user_returns_a_200_for_valid() {
     assert_eq!(200, response.status().as_u16());
 
     let saved = sqlx::query!("SELECT id, name, address, phonenumber, email, password FROM users")
-        .fetch_one(&mut connection)
+        .fetch_one(&app.db_pool)
         .await
         .expect("Failed to fetch saved users");
 
     assert_eq!(saved.name, "Tom");
+    assert_eq!(saved.address, "Tokyo");
+    assert_eq!(saved.phonenumber, "026122222222");
+    assert_eq!(saved.email, "tokyo@gmail.com");
+    assert_eq!(saved.password, "password");
 }
 
 #[tokio::test]
 async fn post_user_returns_a_400_when_data_is_missing() {
     // Arrange
-    let app_address = spawn_app();
+    let app = spawn_app().await;
     let client = reqwest::Client::new();
 
     let mut missing_name_map = HashMap::new();
@@ -86,7 +83,7 @@ async fn post_user_returns_a_400_when_data_is_missing() {
     for (invalid_body, error_message) in test_cases {
         // Act
         let response = client
-            .post(&format!("{}/user", &app_address))
+            .post(&format!("{}/user", &app.address))
             .json(&invalid_body)
             .send()
             .await
