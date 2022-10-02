@@ -12,6 +12,7 @@ pub struct User {
 }
 
 pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
+    log::info!("Saving new user details in the database");
     match sqlx::query!(
         r#"
         INSERT INTO users (id, name, address, phonenumber, email, password)
@@ -27,9 +28,12 @@ pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpRe
     .execute(pool.get_ref())
     .await
     {
-        Ok(_) => HttpResponse::Ok().finish(),
+        Ok(_) => {
+            log::info!("New user details have been saved");
+            HttpResponse::Ok().finish()
+        }
         Err(e) => {
-            println!("Failed to execute query: {}", e);
+            log::error!("Failed to execute query: {:?}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
