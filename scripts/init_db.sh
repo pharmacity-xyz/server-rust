@@ -22,7 +22,7 @@ DB_USER=${POSTGRES_USER:=postgres}
 # Check if a custom password has been set, otherwise default to 'password' 
 DB_PASSWORD="${POSTGRES_PASSWORD:=password}"
 # Check if a custom database name has been set, otherwise default to 'pharmacity-db' 
-DB_NAME="${POSTGRES_DB:=pharmacity-db}"
+DB_NAME="${POSTGRES_DB:=pharmavillage}"
 # Check if a custom port has been set, otherwise default to 'pharmacity-db' 
 DB_PORT="${POSTGRES_PORT:=5432}"
 
@@ -49,6 +49,6 @@ done
 
 export DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}
 sqlx database create
-sqlx migrate run
+# sqlx migrate run
 
 >&2 echo "Postgres has been migrated, ready to go!"
