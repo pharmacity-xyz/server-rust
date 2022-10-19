@@ -4,26 +4,31 @@ use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
 pub struct User {
-    name: String,
-    address: String,
-    phonenumber: String,
     email: String,
     password: String,
+    first_name: String,
+    last_name: String,
+    city: String,
+    country: String,
+    company_name: String,
 }
 
 pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
     log::info!("Saving new user details in the database");
     match sqlx::query!(
         r#"
-        INSERT INTO users (id, name, address, phonenumber, email, password)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
         Uuid::new_v4(),
-        user.name,
-        user.address,
-        user.phonenumber,
         user.email,
-        user.password
+        user.password,
+        user.first_name,
+        user.last_name,
+        user.city,
+        user.country,
+        user.company_name,
+        "User".to_string()
     )
     .execute(pool.get_ref())
     .await
