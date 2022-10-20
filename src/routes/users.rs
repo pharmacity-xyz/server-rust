@@ -1,3 +1,4 @@
+use crate::domain::{NewUser, UserString};
 use actix_web::{web, HttpResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -22,21 +23,32 @@ pub struct User {
     )
 )]
 pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
-    match insert_user(&pool, &user).await {
-        Ok(_) => HttpResponse::Ok().json(user),
+    let new_user = NewUser {
+        id: Uuid::new_v4(),
+        email: UserString::parse(user.email.clone()),
+        password: UserString::parse(user.password.clone()),
+        first_name: UserString::parse(user.first_name.clone()),
+        last_name: UserString::parse(user.last_name.clone()),
+        city: UserString::parse(user.city.clone()),
+        country: UserString::parse(user.country.clone()),
+        company_name: UserString::parse(user.company_name.clone()),
+        role: "User".to_string(),
+    };
+
+    match insert_user(&pool, &new_user).await {
+        Ok(_) => HttpResponse::Ok().json(new_user),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
-pub async fn insert_user(pool: &PgPool, user: &web::Json<User>) -> Result<(), sqlx::Error> {
-    let new_id = Uuid::new_v4();
+pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
         INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
-        new_id,
+        user.id,
         user.email,
         user.password,
         user.first_name,
@@ -44,7 +56,7 @@ pub async fn insert_user(pool: &PgPool, user: &web::Json<User>) -> Result<(), sq
         user.city,
         user.country,
         user.company_name,
-        "User".to_string()
+        user.role
     )
     .execute(pool)
     .await
