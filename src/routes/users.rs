@@ -14,20 +14,24 @@ pub struct User {
     company_name: String,
 }
 
-pub fn parse_user(user: web::Json<User>) -> Result<NewUser, String> {
-    let new_user = NewUser {
-        id: Uuid::new_v4(),
-        email: UserEmail::parse(user.email.clone())?,
-        password: UserString::parse(user.password.clone())?,
-        first_name: UserString::parse(user.first_name.clone())?,
-        last_name: UserString::parse(user.last_name.clone())?,
-        city: UserString::parse(user.city.clone())?,
-        country: UserString::parse(user.country.clone())?,
-        company_name: UserString::parse(user.company_name.clone())?,
-        role: "User".to_string(),
-    };
+impl TryFrom<web::Json<User>> for NewUser {
+    type Error = String;
 
-    Ok(new_user)
+    fn try_from(value: web::Json<User>) -> Result<Self, Self::Error> {
+        let new_user = NewUser {
+            id: Uuid::new_v4(),
+            email: UserEmail::parse(value.email.clone())?,
+            password: UserString::parse(value.password.clone())?,
+            first_name: UserString::parse(value.first_name.clone())?,
+            last_name: UserString::parse(value.last_name.clone())?,
+            city: UserString::parse(value.city.clone())?,
+            country: UserString::parse(value.country.clone())?,
+            company_name: UserString::parse(value.company_name.clone())?,
+            role: "User".to_string(),
+        };
+
+        Ok(new_user)
+    }
 }
 
 #[tracing::instrument(
@@ -39,7 +43,7 @@ pub fn parse_user(user: web::Json<User>) -> Result<NewUser, String> {
     )
 )]
 pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
-    let new_user = match parse_user(user) {
+    let new_user = match user.try_into() {
         Ok(user) => user,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
