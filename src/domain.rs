@@ -35,3 +35,9 @@ impl UserString {
         &self.0
     }
 }
+
+impl AsRef<str> for UserString {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
