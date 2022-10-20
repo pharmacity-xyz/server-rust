@@ -1,4 +1,5 @@
 use uuid::Uuid;
+use validator::validate_email;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct NewUser {
@@ -18,8 +19,11 @@ pub struct UserEmail(String);
 
 impl UserEmail {
     pub fn parse(s: String) -> Result<UserEmail, String> {
-        //TODO: add validation
+        if validate_email(&s) {
         Ok(Self(s))
+        }else {
+            Err(format!("{} is not a valid user email.", s))
+        }
     }
 }
 
