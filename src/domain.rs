@@ -13,6 +13,7 @@ pub struct NewUser {
     pub role: String,
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct UserString(String);
 
 impl UserString {
@@ -24,5 +25,13 @@ impl UserString {
         } else {
             Self(s)
         }
+    }
+
+    pub fn inner(&self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn inner_ref(&self) -> &str {
+        &self.0
     }
 }

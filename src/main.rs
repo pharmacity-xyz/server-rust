@@ -3,7 +3,6 @@ use pharmacity::startup::run;
 use pharmacity::telemetry::{get_subscriber, init_subscriber};
 use secrecy::ExposeSecret;
 use sqlx::postgres::PgPoolOptions;
-use sqlx::PgPool;
 use std::net::TcpListener;
 
 #[tokio::main]

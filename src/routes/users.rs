@@ -49,13 +49,13 @@ pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), sqlx::Erro
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
         user.id,
-        user.email,
-        user.password,
-        user.first_name,
-        user.last_name,
-        user.city,
-        user.country,
-        user.company_name,
+        user.email.inner(),
+        user.password.inner(),
+        user.first_name.inner(),
+        user.last_name.inner(),
+        user.city.inner(),
+        user.country.inner(),
+        user.company_name.inner(),
         user.role
     )
     .execute(pool)
