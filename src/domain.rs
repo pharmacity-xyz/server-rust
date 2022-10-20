@@ -17,13 +17,13 @@ pub struct NewUser {
 pub struct UserString(String);
 
 impl UserString {
-    pub fn parse(s: String) -> UserString {
+    pub fn parse(s: String) -> Result<UserString, String> {
         let is_empty_or_whitespace = s.trim().is_empty();
 
         if is_empty_or_whitespace {
-            panic!("{} is not a valid user", s);
+            Err(format!("{} is not a valid user", s))
         } else {
-            Self(s)
+            Ok(Self(s))
         }
     }
 

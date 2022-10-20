@@ -25,13 +25,15 @@ pub struct User {
 pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
     let new_user = NewUser {
         id: Uuid::new_v4(),
-        email: UserString::parse(user.email.clone()),
-        password: UserString::parse(user.password.clone()),
-        first_name: UserString::parse(user.first_name.clone()),
-        last_name: UserString::parse(user.last_name.clone()),
-        city: UserString::parse(user.city.clone()),
-        country: UserString::parse(user.country.clone()),
-        company_name: UserString::parse(user.company_name.clone()),
+        email: UserString::parse(user.email.clone()).expect("Email validation failed."),
+        password: UserString::parse(user.password.clone()).expect("Password validation failed."),
+        first_name: UserString::parse(user.first_name.clone())
+            .expect("First name validation failed."),
+        last_name: UserString::parse(user.last_name.clone()).expect("Last name validation failed."),
+        city: UserString::parse(user.city.clone()).expect("City validation failed."),
+        country: UserString::parse(user.country.clone()).expect("Country validation failed."),
+        company_name: UserString::parse(user.company_name.clone())
+            .expect("Company name validation failed."),
         role: "User".to_string(),
     };
 
