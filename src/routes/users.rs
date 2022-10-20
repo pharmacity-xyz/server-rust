@@ -15,12 +15,13 @@ pub struct User {
 
 pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
     log::info!("Saving new user details in the database");
+    let new_id = Uuid::new_v4();
     match sqlx::query!(
         r#"
         INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
-        Uuid::new_v4(),
+        new_id,
         user.email,
         user.password,
         user.first_name,
