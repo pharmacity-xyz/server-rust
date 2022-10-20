@@ -13,16 +13,26 @@ pub struct User {
     company_name: String,
 }
 
+#[tracing::instrument(
+    name = "Addming a new user",
+    skip(user, pool),
+    fields(
+        request_id = %Uuid::new_v4(),
+        user_email = %user.email,
+        user_first_name = %user.first_name
+    )
+)]
 pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
-    let request_id = Uuid::new_v4();
-    tracing::info!(
-        "request_id {} - Adding '{}' '{}' as a new subscriber",
-        request_id,
-        user.email,
-        user.first_name
-    );
+    match insert_user(&pool, &user).await {
+        Ok(_) => HttpResponse::Ok().json(user),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
+
+#[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
+pub async fn insert_user(pool: &PgPool, user: &web::Json<User>) -> Result<(), sqlx::Error> {
     let new_id = Uuid::new_v4();
-    match sqlx::query!(
+    sqlx::query!(
         r#"
         INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -37,17 +47,11 @@ pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpRe
         user.company_name,
         "User".to_string()
     )
-    .execute(pool.get_ref())
+    .execute(pool)
     .await
-    {
-        Ok(_) => {
-            log::info!("New user details have been saved");
-            HttpResponse::Ok().json(user)
-            // HttpResponse::Ok().finish()
-        }
-        Err(e) => {
-            log::error!("Failed to execute query: {:?}", e);
-            HttpResponse::InternalServerError().finish()
-        }
-    }
+    .map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
+    })?;
+    Ok(())
 }
