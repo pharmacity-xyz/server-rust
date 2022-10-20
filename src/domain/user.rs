@@ -1,10 +1,9 @@
-use tracing::Subscriber;
 use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct NewUser {
     pub id: Uuid,
-    pub email: SubscriberEmail,
+    pub email: UserEmail,
     pub password: UserString,
     pub first_name: UserString,
     pub last_name: UserString,
@@ -15,16 +14,16 @@ pub struct NewUser {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct SubscriberEmail(String);
+pub struct UserEmail(String);
 
-impl SubscriberEmail {
-    pub fn parse(s: String) -> Result<SubscriberEmail, String> {
+impl UserEmail {
+    pub fn parse(s: String) -> Result<UserEmail, String> {
         //TODO: add validation
         Ok(Self(s))
     }
 }
 
-impl AsRef<str> for SubscriberEmail {
+impl AsRef<str> for UserEmail {
     fn as_ref(&self) -> &str {
         &self.0
     }

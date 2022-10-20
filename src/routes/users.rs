@@ -1,4 +1,4 @@
-use crate::domain::{NewUser, UserString};
+use crate::domain::{NewUser, UserString, UserEmail};
 use actix_web::{web, HttpResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -25,7 +25,7 @@ pub struct User {
 pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
     let new_user = NewUser {
         id: Uuid::new_v4(),
-        email: UserString::parse(user.email.clone()).expect("Email validation failed."),
+        email: UserEmail::parse(user.email.clone()).expect("Email validation failed."),
         password: UserString::parse(user.password.clone()).expect("Password validation failed."),
         first_name: UserString::parse(user.first_name.clone())
             .expect("First name validation failed."),
