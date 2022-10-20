@@ -14,7 +14,13 @@ pub struct User {
 }
 
 pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
-    log::info!("Saving new user details in the database");
+    let request_id = Uuid::new_v4();
+    tracing::info!(
+        "request_id {} - Adding '{}' '{}' as a new subscriber",
+        request_id,
+        user.email,
+        user.first_name
+    );
     let new_id = Uuid::new_v4();
     match sqlx::query!(
         r#"
