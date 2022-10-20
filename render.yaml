@@ -1,0 +1,14 @@
+services:
+  # A Docker web service
+  - type: web
+    name: pharmacity
+    env: docker
+    repo: https://github.com/pharmacity-xyz/pharmacity # optional
+    region: singapore # optional (defaults to oregon)
+    plan: starter # optional (defaults to starter)
+    branch: master # optional (defaults to master)
+    rootDir: .
+    numInstances: 1 # optional (defaults to 1)
+    healthCheckPath: /health_check
+databases:
+  - name: pharmavillage
