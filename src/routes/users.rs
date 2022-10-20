@@ -2,7 +2,7 @@ use actix_web::{web, HttpResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct User {
     email: String,
     password: String,
@@ -35,7 +35,8 @@ pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpRe
     {
         Ok(_) => {
             log::info!("New user details have been saved");
-            HttpResponse::Ok().finish()
+            HttpResponse::Ok().json(user)
+            // HttpResponse::Ok().finish()
         }
         Err(e) => {
             log::error!("Failed to execute query: {:?}", e);
