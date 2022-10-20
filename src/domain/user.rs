@@ -20,8 +20,8 @@ pub struct UserEmail(String);
 impl UserEmail {
     pub fn parse(s: String) -> Result<UserEmail, String> {
         if validate_email(&s) {
-        Ok(Self(s))
-        }else {
+            Ok(Self(s))
+        } else {
             Err(format!("{} is not a valid user email.", s))
         }
     }
