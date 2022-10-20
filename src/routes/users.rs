@@ -17,7 +17,6 @@ pub struct User {
     name = "Addming a new user",
     skip(user, pool),
     fields(
-        request_id = %Uuid::new_v4(),
         user_email = %user.email,
         user_first_name = %user.first_name
     )
