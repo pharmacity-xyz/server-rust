@@ -1,5 +1,5 @@
 use crate::domain::{NewUser, UserEmail, UserString};
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -42,20 +42,20 @@ impl TryFrom<web::Json<User>> for NewUser {
         user_first_name = %user.first_name
     )
 )]
-pub async fn post_user(user: web::Json<User>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn post_user(
+    user: web::Json<User>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, actix_web::Error> {
     let new_user = match user.try_into() {
         Ok(user) => user,
-        Err(_) => return HttpResponse::BadRequest().finish(),
+        Err(_) => return HttpResponse::BadRequest(),
     };
 
-    match insert_user(&pool, &new_user).await {
-        Ok(_) => HttpResponse::Ok().json(new_user),
-        Err(_) => HttpResponse::InternalServerError().finish(),
-    }
+    insert_user(&pool, &new_user).await?
 }
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
-pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), sqlx::Error> {
+pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), InsertUserError> {
     sqlx::query!(
         r#"
         INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
@@ -79,3 +79,30 @@ pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), sqlx::Erro
     })?;
     Ok(())
 }
+
+#[derive(Debug)]
+pub struct InsertUserError(sqlx::Error);
+
+impl std::error::Error for InsertUserError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.0)
+    }
+}
+
+impl std::fmt::Debug for InsertUserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}\nCaused by:\n\t{}", self, self.0)
+    }
+}
+
+impl std::fmt::Display for InsertUserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "A database error was encountered white \
+            trying to store a user"
+        )
+    }
+}
+
+impl ResponseError for InsertUserError {}
