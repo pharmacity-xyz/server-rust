@@ -12,9 +12,10 @@ pub async fn validate_credentials(
         r#"
         SELECT id
         FROM users
-        WHERE email = $1 
+        WHERE email = $1 AND password = $2 
         "#,
-        credentias.email
+        credentials.email,
+        credentias.password
     )
     .fetch_optional(pool)
     .await
