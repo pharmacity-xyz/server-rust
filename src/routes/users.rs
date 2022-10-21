@@ -45,13 +45,45 @@ impl TryFrom<web::Json<User>> for NewUser {
 pub async fn post_user(
     user: web::Json<User>,
     pool: web::Data<PgPool>,
-) -> Result<HttpResponse, actix_web::Error> {
-    let new_user = match user.try_into() {
-        Ok(user) => user,
-        Err(_) => return HttpResponse::BadRequest(),
-    };
+) -> Result<HttpResponse, PostUserError> {
+    let new_user = user.try_into()?;
+    insert_user(&pool, &new_user).await?;
+    Ok(HttpResponse::Ok().json(new_user))
+}
 
-    insert_user(&pool, &new_user).await?
+#[derive(Debug)]
+pub enum PostUserError {
+    ValidationError(String),
+    DatabaseError(sqlx::Error),
+    InsertUserError(InsertUserError),
+}
+
+impl std::fmt::Display for PostUserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Failed to create a new user.")
+    }
+}
+
+impl std::error::Error for PostUserError {}
+
+impl ResponseError for PostUserError {}
+
+impl From<sqlx::Error> for PostUserError {
+    fn from(e: sqlx::Error) -> Self {
+        Self::DatabaseError(e)
+    }
+}
+
+impl From<InsertUserError> for PostUserError {
+    fn from(e: InsertUserError) -> Self {
+        Self::InsertUserError(e)
+    }
+}
+
+impl From<String> for PostUserError {
+    fn from(e: String) -> Self {
+        Self::ValidationError(e)
+    }
 }
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
@@ -73,14 +105,10 @@ pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), InsertUser
     )
     .execute(pool)
     .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+    .map_err(InsertUserError)?;
     Ok(())
 }
 
-#[derive(Debug)]
 pub struct InsertUserError(sqlx::Error);
 
 impl std::error::Error for InsertUserError {
