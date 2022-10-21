@@ -1,19 +1,20 @@
 use crate::routes::Credentials;
 use actix_web::{http::StatusCode, ResponseError};
+use secrecy::ExposeSecret;
 use sqlx::PgPool;
 
 pub async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
 ) -> Result<uuid::Uuid, LoginError> {
+    
     let user_id: Option<_> = sqlx::query!(
         r#"
         SELECT id
         FROM users
-        WHERE email = $1 AND password = $2
+        WHERE email = $1 
         "#,
-        credentials.email,
-        credentials.password.expose_secret()
+        credentias.email
     )
     .fetch_optional(pool)
     .await

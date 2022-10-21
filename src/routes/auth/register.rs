@@ -3,8 +3,8 @@ use anyhow::Context;
 use secrecy::Secret;
 
 pub struct Credentials {
-    email: String,
-    password: Secret<String>,
+    pub email: String,
+    pub password: Secret<String>,
 }
 
 fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Error> {
