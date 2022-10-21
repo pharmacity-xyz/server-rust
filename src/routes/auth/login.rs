@@ -6,7 +6,24 @@ pub async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
 ) -> Result<uuid::Uuid, LoginError> {
-    Ok(uuid::Uuid::new_v4())
+    let user_id: Option<_> = sqlx::query!(
+        r#"
+        SELECT id
+        FROM users
+        WHERE email = $1 AND password = $2
+        "#,
+        credentials.email,
+        credentials.password.expose_secret()
+    )
+    .fetch_optional(pool)
+    .await
+    .context("Failed to perform a query to validate auth credentials.")
+    .map_err(LoginError::UnexpectedError)?;
+
+    user_id
+        .map(|row| row.id)
+        .ok_or_else(|| anyhow::anyhow!("Invalid error or password"))
+        .map_err(LoginError::AuthError)
 }
 
 #[derive(thiserror::Error, Debug)]

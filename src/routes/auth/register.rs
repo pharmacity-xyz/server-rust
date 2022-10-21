@@ -3,7 +3,7 @@ use anyhow::Context;
 use secrecy::Secret;
 
 pub struct Credentials {
-    username: String,
+    email: String,
     password: Secret<String>,
 }
 
@@ -25,9 +25,9 @@ fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Erro
         .context("The decoded credential string is not valid UTF8")?;
 
     let mut credentials = decoded_credentials.splitn(2, ':');
-    let username = credentials
+    let email = credentials
         .next()
-        .ok_or_else(|| anyhow::anyhow!("A username must be provided in 'Basic' auth."))?
+        .ok_or_else(|| anyhow::anyhow!("A email must be provided in 'Basic' auth."))?
         .to_string();
     let password = credentials
         .next()
@@ -35,7 +35,7 @@ fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Erro
         .to_string();
 
     Ok(Credentials {
-        username,
+        email,
         password: Secret::new(password),
     })
 }
