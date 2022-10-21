@@ -1,5 +1,5 @@
 use crate::domain::{NewUser, UserEmail, UserString};
-use actix_web::{web, HttpResponse, ResponseError};
+use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -66,7 +66,16 @@ impl std::fmt::Display for PostUserError {
 
 impl std::error::Error for PostUserError {}
 
-impl ResponseError for PostUserError {}
+impl ResponseError for PostUserError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            PostUserError::ValidationError(_) => StatusCode::BAD_REQUEST,
+            PostUserError::DatabaseError(_) | PostUserError::InsertUserError(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+}
 
 impl From<sqlx::Error> for PostUserError {
     fn from(e: sqlx::Error) -> Self {
