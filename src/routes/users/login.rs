@@ -33,8 +33,10 @@ pub async fn login(
                 AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
                 AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
             };
-
-            Err(InternalError::new(HttpResponse::Ok().finish()))
+            let response = HttpResponse::SeeOther()
+                .insert_header(("Set-Cookie", format!("_flash={e}")))
+                .finish();
+            Err(InternalError::from_response(e, response))
         }
     }
 }
