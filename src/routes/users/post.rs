@@ -99,7 +99,7 @@ impl From<String> for PostUserError {
 pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), InsertUserError> {
     sqlx::query!(
         r#"
-        INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
+        INSERT INTO users (id, email, password_hash, first_name, last_name, city, country, company_name, role)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
         user.id,

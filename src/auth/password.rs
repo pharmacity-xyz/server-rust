@@ -1,14 +1,14 @@
-
 use actix_web::http::header::HeaderMap;
 use anyhow::Context;
 use secrecy::Secret;
+use sqlx::PgPool;
 
 #[derive(thiserror::Error, Debug)]
 pub enum AuthError {
     #[error("Invalid credentials")]
     InvalidCredentials(#[source] anyhow::Error),
     #[error(transparent)]
-    UnexpectedError(#[from] anyhow::Error)
+    UnexpectedError(#[from] anyhow::Error),
 }
 
 pub struct Credentials {
@@ -16,7 +16,7 @@ pub struct Credentials {
     pub password: Secret<String>,
 }
 
-fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Error> {
+pub fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Error> {
     let header_value = headers
         .get("Authorization")
         .context("The 'Authorization' header was missing")?
@@ -47,4 +47,40 @@ fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Erro
         email,
         password: Secret::new(password),
     })
+}
+
+async fn get_stored_credentials(
+    email: &str,
+    pool: &PgPool,
+) -> Result<Option<(uuid::Uuid, Secret<String>)>, anyhow::Error> {
+    let row = sqlx::query!(r#"SELECT id, password_hash FROM users WHERE email = $1"#, email,)
+        .fetch_optional(pool)
+        .await
+        .context("Failed to performed a query to retrieve stored credentials")?
+        .map(|row| (row.id, Secret::new(row.password_hash)));
+    Ok(row)
+}
+
+pub async fn validate_credentials(
+    credentials: Credentials,
+    pool: &PgPool,
+) -> Result<uuid::Uuid, AuthError> {
+    let mut user_id = None;
+    let mut expected_password_hash = Secret::new(String::new());
+
+    if let Some((stored_user_id, stored_password_hash)) =
+        get_stored_credentials(&credentials.email, pool).await?
+    {
+        user_id = Some(stored_user_id);
+        expected_password_hash = stored_password_hash;
+    }
+
+    // .fetch_optional(pool)
+    // .await?;
+
+    // user_id
+    //     .map(|row| row.id)
+    //     .ok_or_else(|| anyhow::anyhow!("Invalid error or password"))
+    //     .map_err(LoginError::AuthError)
+    Ok(uuid::Uuid::new_v4())
 }
