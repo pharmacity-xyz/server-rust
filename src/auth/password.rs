@@ -51,6 +51,7 @@ pub fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::
     })
 }
 
+#[tracing::instrument(name = "Validate stored credentials", skip(email, pool))]
 async fn get_stored_credentials(
     email: &str,
     pool: &PgPool,
@@ -66,6 +67,7 @@ async fn get_stored_credentials(
     Ok(row)
 }
 
+#[tracing::instrument(name = "Validate credentials", skip(credentials, pool))]
 pub async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
