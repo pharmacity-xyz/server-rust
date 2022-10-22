@@ -9,19 +9,14 @@ pub struct FormData {
     password: Secret<String>,
 }
 
-pub async fn login(
-    credential: web::Json<FormData>,
-    pool: &PgPool,
-) -> Result<HttpResponse, LoginError> {
+pub async fn login(credential: web::Json<FormData>, pool: &PgPool) -> HttpResponse {
     let credentials = Credentials {
         email: credential.email.clone(),
         password: credential.password.clone(),
     };
 
-    Ok(HttpResponse::Ok().finish())
+    HttpResponse::Ok().finish()
 }
-
-
 
 #[derive(thiserror::Error, Debug)]
 pub enum LoginError {
