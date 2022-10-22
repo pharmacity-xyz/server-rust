@@ -1,26 +1,31 @@
 use crate::routes::Credentials;
-use actix_web::{http::StatusCode, ResponseError};
+use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
 use secrecy::ExposeSecret;
 use sqlx::PgPool;
+
+pub async fn login(
+    credential: web::Json<Credentials>,
+    pool: &PgPool,
+) -> Result<HttpResponse, LoginError> {
+    let credentials = Credentials {
+        email: credential.email.clone(),
+        password: credential.password.clone(),
+    };
+
+    Ok(HttpResponse::Ok().finish())
+}
 
 pub async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
 ) -> Result<uuid::Uuid, LoginError> {
-    
+    let mut user_id = None;
     let user_id: Option<_> = sqlx::query!(
-        r#"
-        SELECT id
-        FROM users
-        WHERE email = $1 AND password = $2 
-        "#,
+        r#"SELECT id FROM users WHERE email = $1"#,
         credentials.email,
-        credentias.password
     )
     .fetch_optional(pool)
-    .await
-    .context("Failed to perform a query to validate auth credentials.")
-    .map_err(LoginError::UnexpectedError)?;
+    .await?;
 
     user_id
         .map(|row| row.id)
