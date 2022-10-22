@@ -3,8 +3,14 @@ use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
 use secrecy::ExposeSecret;
 use sqlx::PgPool;
 
+#[derive(serde::Deserialize)]
+pub struct FormData {
+    username: String,
+    password: Secret<String>,
+}
+
 pub async fn login(
-    credential: web::Json<Credentials>,
+    credential: web::Json<FormData>,
     pool: &PgPool,
 ) -> Result<HttpResponse, LoginError> {
     let credentials = Credentials {
