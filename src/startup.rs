@@ -2,7 +2,7 @@ use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::{
         health_check,
-        users::{login::login, post::post_user},
+        users::{change_password, login::login, post::post_user},
     },
 };
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
@@ -31,7 +31,8 @@ impl Application {
             listener,
             connection_pool,
             configuration.application.hmac_secret,
-        )?;
+        )
+        .await?;
 
         Ok(Self { port, server })
     }
@@ -51,7 +52,7 @@ pub fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
         .connect_lazy_with(configuration.with_db())
 }
 
-fn run(
+async fn run(
     listener: TcpListener,
     db_pool: PgPool,
     hmac_secret: Secret<String>,
@@ -67,6 +68,7 @@ fn run(
             .route("/health_check", web::get().to(health_check))
             .route("/users", web::post().to(post_user))
             .route("/users/login", web::post().to(login))
+            .route("/users/change_password", web::post().to(change_password))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
