@@ -1,5 +1,6 @@
 use crate::auth::{validate_credentials, AuthError, Credentials};
 use crate::util::error_chain_fmt;
+use actix_web::error::InternalError;
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
 use hmac::{Hmac, Mac};
 use secrecy::{ExposeSecret, Secret};
@@ -12,7 +13,10 @@ pub struct FormData {
 }
 
 #[tracing::instrument(skip(credential, pool), fields(email=tracing::field::Empty, user_id=tracing::field::Empty))]
-pub async fn login(credential: web::Json<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn login(
+    credential: web::Json<FormData>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, InternalError<LoginError>> {
     let credentials = Credentials {
         email: credential.email.clone(),
         password: credential.password.clone(),
@@ -22,7 +26,7 @@ pub async fn login(credential: web::Json<FormData>, pool: web::Data<PgPool>) -> 
     match validate_credentials(credentials, &pool).await {
         Ok(user_id) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
-            HttpResponse::Ok().finish()
+            Ok(HttpResponse::Ok().finish())
         }
         Err(e) => {
             let e = match e {
@@ -30,7 +34,7 @@ pub async fn login(credential: web::Json<FormData>, pool: web::Data<PgPool>) -> 
                 AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
             };
 
-            HttpResponse::Ok().finish()
+            Err(InternalError::new(HttpResponse::Ok().finish()))
         }
     }
 }
