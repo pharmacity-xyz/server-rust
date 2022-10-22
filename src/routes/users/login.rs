@@ -1,5 +1,7 @@
 use crate::auth::{validate_credentials, AuthError, Credentials};
+use crate::util::error_chain_fmt;
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
+use hmac::{Hmac, Mac};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 
@@ -10,26 +12,27 @@ pub struct FormData {
 }
 
 #[tracing::instrument(skip(credential, pool), fields(email=tracing::field::Empty, user_id=tracing::field::Empty))]
-pub async fn login(
-    credential: web::Json<FormData>,
-    pool: web::Data<PgPool>,
-) -> Result<HttpResponse, LoginError> {
+pub async fn login(credential: web::Json<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
     let credentials = Credentials {
         email: credential.email.clone(),
         password: credential.password.clone(),
     };
     tracing::Span::current().record("email", &tracing::field::display(&credentials.email));
 
-    let user_id = validate_credentials(credentials, &pool)
-        .await
-        .map_err(|e| match e {
-            AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
-            AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
-        })?;
+    match validate_credentials(credentials, &pool).await {
+        Ok(user_id) => {
+            tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+            HttpResponse::Ok().finish()
+        }
+        Err(e) => {
+            let e = match e {
+                AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
+                AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
+            };
 
-    tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
-
-    Ok(HttpResponse::Ok().finish())
+            HttpResponse::Ok().finish()
+        }
+    }
 }
 
 #[derive(thiserror::Error)]
