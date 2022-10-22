@@ -9,7 +9,7 @@ pub struct FormData {
     password: Secret<String>,
 }
 
-pub async fn login(credential: web::Json<FormData>, pool: &PgPool) -> HttpResponse {
+pub async fn login(credential: web::Json<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
     let credentials = Credentials {
         email: credential.email.clone(),
         password: credential.password.clone(),
