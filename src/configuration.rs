@@ -1,4 +1,5 @@
 use secrecy::{ExposeSecret, Secret};
+use sqlx::postgres::PgConnectOptions;
 
 #[derive(serde::Deserialize)]
 pub struct Settings {
@@ -23,15 +24,12 @@ pub struct DatabaseSettings {
 }
 
 impl DatabaseSettings {
-    pub fn with_db(&self) -> Secret<String> {
-        Secret::new(format!(
-            "postgres://{}:{}@{}:{}/{}",
-            self.username,
-            self.password.expose_secret(),
-            self.host,
-            self.port,
-            self.database_name
-        ))
+    pub fn with_db(&self) -> PgConnectOptions {
+        PgConnectOptions::new()
+            .host(&self.host)
+            .username(&self.username)
+            .password(&self.password.expose_secret())
+            .port(self.port)
     }
 
     pub fn connection_string_without_db(&self) -> Secret<String> {
