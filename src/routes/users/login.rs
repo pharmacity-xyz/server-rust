@@ -1,19 +1,30 @@
-use crate::routes::Credentials;
+use crate::auth::{validate_credentials, Credentials};
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
-use secrecy::ExposeSecret;
+use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
-    username: String,
+    email: String,
     password: Secret<String>,
 }
 
+#[tracing::instrument(skip(credential, pool), fields(email=tracing::field::Empty, user_id=tracing::field::Empty))]
 pub async fn login(credential: web::Json<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
     let credentials = Credentials {
         email: credential.email.clone(),
         password: credential.password.clone(),
     };
+    tracing::Span::current().record("email", &tracing::field::display(&credentials.email));
+
+    match validate_credentials(credentials, &pool).await {
+        Ok(user_id) => {
+            tracing::Span::current().record("email", &tracing::field::display(&user_id));
+        }
+        Err(_) => {
+            todo!()
+        }
+    }
 
     HttpResponse::Ok().finish()
 }
