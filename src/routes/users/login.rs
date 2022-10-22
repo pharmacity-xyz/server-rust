@@ -1,7 +1,8 @@
 use crate::auth::{validate_credentials, AuthError, Credentials};
 use crate::util::error_chain_fmt;
 use actix_web::error::InternalError;
-use actix_web::{cookie::Cookie, http::StatusCode, web, HttpResponse, ResponseError};
+use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
+use actix_web_flash_messages::FlashMessage;
 use hmac::{Hmac, Mac};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
@@ -33,10 +34,8 @@ pub async fn login(
                 AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
                 AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
             };
-
-            let response = HttpResponse::SeeOther()
-                .cookie(Cookie::new("_flash", e.to_string()))
-                .finish();
+            FlashMessage::error(e.to_string()).send();
+            let response = HttpResponse::SeeOther().finish();
             Err(InternalError::from_response(e, response))
         }
     }
