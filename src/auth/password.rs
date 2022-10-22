@@ -1,6 +1,7 @@
 use actix_web::http::header::HeaderMap;
 use anyhow::Context;
-use secrecy::Secret;
+use secrecy::{Secret, ExposeSecret};
+use sha3::Digest;
 use sqlx::PgPool;
 
 #[derive(thiserror::Error, Debug)]
@@ -67,6 +68,11 @@ pub async fn validate_credentials(
 ) -> Result<uuid::Uuid, AuthError> {
     let mut user_id = None;
     let mut expected_password_hash = Secret::new(String::new());
+
+    let password_hash = sha3::Sha3_256::digest(
+        credentials.password.expose_secret().as_bytes()
+    );
+    let password_hash = format!("{:x}", password_hash);
 
     if let Some((stored_user_id, stored_password_hash)) =
         get_stored_credentials(&credentials.email, pool).await?
