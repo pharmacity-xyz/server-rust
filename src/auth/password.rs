@@ -79,14 +79,6 @@ gZiV/M1gPc22ElAH/Jh1Hw$\
 CWOrkoo7oJBQ/iyh7uJ0LO2aLEfrHwTWllSAxT0zRno"
             .to_string(),
     );
-    let hasher = Argon2::new(
-        Algorithm::Argon2id,
-        Version::V0x13,
-        Params::new(15000, 2, 1, None).expect("Failed to create params"),
-    );
-
-    let password_hash = sha3::Sha3_256::digest(credentials.password.expose_secret().as_bytes());
-    let password_hash = format!("{:x}", password_hash);
 
     if let Some((stored_user_id, stored_password_hash)) =
         get_stored_credentials(&credentials.email, pool).await?
