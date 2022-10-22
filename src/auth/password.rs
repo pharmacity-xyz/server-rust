@@ -1,9 +1,10 @@
 use actix_web::http::header::HeaderMap;
 use anyhow::Context;
-use argon2::{Algorithm, Argon2, Params, PasswordHash, PasswordHasher, PasswordVerifier, Version};
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use secrecy::{ExposeSecret, Secret};
-use sha3::Digest;
 use sqlx::PgPool;
+
+use crate::telemetry::spawn_blocking_with_tracing;
 
 #[derive(thiserror::Error, Debug)]
 pub enum AuthError {
@@ -87,14 +88,14 @@ CWOrkoo7oJBQ/iyh7uJ0LO2aLEfrHwTWllSAxT0zRno"
         expected_password_hash = stored_password_hash;
     }
 
-    tokio::task::spawn_blocking(move || {
+    spawn_blocking_with_tracing(move || {
         verify_password_hash(expected_password_hash, credentials.password)
     })
     .await
     .context("Failed to spawn blocking task")
-    .map_err(AuthError::UnexpectedError);
+    .map_err(AuthError::UnexpectedError)??;
 
-    Ok(user_id)
+    Ok(user_id.expect("Failed to get user id"))
 }
 
 #[tracing::instrument(
