@@ -21,23 +21,7 @@ pub async fn login(
     Ok(HttpResponse::Ok().finish())
 }
 
-pub async fn validate_credentials(
-    credentials: Credentials,
-    pool: &PgPool,
-) -> Result<uuid::Uuid, LoginError> {
-    let mut user_id = None;
-    let user_id: Option<_> = sqlx::query!(
-        r#"SELECT id FROM users WHERE email = $1"#,
-        credentials.email,
-    )
-    .fetch_optional(pool)
-    .await?;
 
-    user_id
-        .map(|row| row.id)
-        .ok_or_else(|| anyhow::anyhow!("Invalid error or password"))
-        .map_err(LoginError::AuthError)
-}
 
 #[derive(thiserror::Error, Debug)]
 pub enum LoginError {
