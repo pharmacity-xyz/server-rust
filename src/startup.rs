@@ -5,10 +5,9 @@ use crate::{
         users::{login::login, post::post_user},
     },
 };
-use actix_web::dev::Server;
-use actix_web::{web, web::Data, App, HttpServer};
-use actix_web_flash_messages::storage::CookieMessageStore;
-use actix_web_flash_messages::FlashMessagesFramework;
+use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
+use actix_web_flash_messages::{storage::CookieMessageStore, FlashMessagesFramework};
+use secrecy::{ExposeSecret, Secret};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
@@ -28,7 +27,11 @@ impl Application {
         );
         let listener = TcpListener::bind(&address)?;
         let port = listener.local_addr().unwrap().port();
-        let server = run(listener, connection_pool)?;
+        let server = run(
+            listener,
+            connection_pool,
+            configuration.application.hmac_secret,
+        )?;
 
         Ok(Self { port, server })
     }
@@ -48,9 +51,14 @@ pub fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
         .connect_lazy_with(configuration.with_db())
 }
 
-fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error> {
+fn run(
+    listener: TcpListener,
+    db_pool: PgPool,
+    hmac_secret: Secret<String>,
+) -> Result<Server, std::io::Error> {
     let db_pool = Data::new(db_pool);
-    let message_store = CookieMessageStore::builder(todo!()).build();
+    let message_store =
+        CookieMessageStore::builder(Key::from(hmac_secret.expose_secret().as_bytes())).build();
     let message_framework = FlashMessagesFramework::builder(message_store).build();
     let server = HttpServer::new(move || {
         App::new()
@@ -60,6 +68,7 @@ fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error>
             .route("/users", web::post().to(post_user))
             .route("/users/login", web::post().to(login))
             .app_data(db_pool.clone())
+            .app_data(Data::new(hmac_secret.clone()))
     })
     .listen(listener)?
     .run();
