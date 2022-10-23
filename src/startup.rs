@@ -3,7 +3,7 @@ use crate::{
     routes::{
         auth::{change_password::change_password, login::login},
         get_all_users, health_check,
-        users::post::post_user, update_user,
+        users::post::post_user, update_user, post_category, get_categories, update_category,
     },
 };
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
@@ -75,6 +75,9 @@ async fn run(
             .route("/auth/change_password", web::post().to(change_password))
             .route("/users", web::get().to(get_all_users))
             .route("/users", web::put().to(update_user))
+            .route("/categories", web::post().to(post_category))
+            .route("/categories", web::get().to(get_categories))
+            .route("/categories", web::put().to(update_category))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
