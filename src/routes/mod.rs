@@ -1,9 +1,9 @@
 pub mod auth;
-pub mod category;
+pub mod categories;
 mod health_check;
 pub mod users;
 
 pub use auth::*;
-pub use category::*;
+pub use categories::*;
 pub use health_check::*;
 pub use users::*;
