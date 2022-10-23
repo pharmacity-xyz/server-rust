@@ -40,10 +40,24 @@ pub async fn change_password(
             AuthError::UnexpectedError(_) => Err(e500(e)),
         };
     }
-    let user_id = sqlx::query!(r#"SELECT id FROM users WHERE email = $1"#, email,)
-        .fetch_optional(pool)
-        .await?;
-    crate::authentication::change_password(user_id.expect(""), form.new_password, &pool)
+    let user_id = sqlx::query!(r#"SELECT id FROM users WHERE email = $1"#, form.email)
+        .fetch_optional(&**pool)
+        .await;
+
+    // let user_id = match user_id {
+    //     Ok(record) => {
+    //         if record.is_some() {
+    //             record.expect("").id
+    //         } else {
+    //             return Err(e500("The id does not find"));
+    //         }
+    //     }
+    //     Err(e) => return Err(e500(e));
+    // };
+
+    let id = user_id.expect("").expect("").id;
+
+    crate::authentication::change_password(id, form.new_password.clone(), &pool)
         .await
         .map_err(e500)?;
     FlashMessage::error("Your password has been changed.").send();
