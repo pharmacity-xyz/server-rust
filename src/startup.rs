@@ -9,7 +9,7 @@ use crate::{
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
 use actix_web_flash_messages::{storage::CookieMessageStore, FlashMessagesFramework};
 use secrecy::{ExposeSecret, Secret};
-use sqlx::{postgres::PgPoolOptions, Connection, PgConnection, PgPool};
+use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
@@ -24,7 +24,6 @@ impl Application {
             PgPool::connect("postgres://postgres:password@localhost:5432/pharmacity-db")
                 .await
                 .expect("Failed to connect to Postgres.");
-        // let connection_pool = get_connection_pool(&configuration.database);
 
         let address = format!(
             "{}:{}",

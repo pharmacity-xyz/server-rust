@@ -26,7 +26,7 @@ pub async fn login(
     match validate_credentials(credentials, &pool).await {
         Ok(user_id) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
-            Ok(HttpResponse::Ok().finish())
+            Ok(HttpResponse::Ok().json(user_id))
         }
         Err(e) => {
             let e = match e {
