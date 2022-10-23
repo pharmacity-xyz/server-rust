@@ -3,7 +3,7 @@ use crate::{
     domain::{NewUser, UserEmail, UserString},
 };
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
-use secrecy::Secret;
+use secrecy::{ExposeSecret, Secret};
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
@@ -46,30 +46,34 @@ impl TryFrom<web::Json<User>> for NewUser {
         user_first_name = %user.first_name
     )
 )]
-pub async fn post_user(user: web::Json<User>, pool: web::Data<PgConnection>) -> HttpResponse {
+pub async fn post_user(
+    user: web::Json<User>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, PostUserError> {
     // let new_user = user.try_into()?;
     // println!("New User {:?}", new_user);
-    sqlx::query!(
-        r#"
-        INSERT INTO users (id, email, password_hash, first_name, last_name, city, country, company_name, role)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        "#,
-        uuid::Uuid::new_v4(),
-        // user.id,
-        user.email,
-        // hashed_password.expose_secret(),
-        user.password,
-        user.first_name,
-        user.last_name,
-        user.city,
-        user.country,
-        user.company_name,
-        "User"
-    )
-    .execute(pool.clone())
-    .await;
-    // insert_user(&pool, user).await?;
-    HttpResponse::Ok().finish()
+    // sqlx::query!(
+    //     r#"
+    //     INSERT INTO users (id, email, password_hash, first_name, last_name, city, country, company_name, role)
+    //     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    //     "#,
+    //     uuid::Uuid::new_v4(),
+    //     // user.id,
+    //     user.email,
+    //     // hashed_password.expose_secret(),
+    //     user.password,
+    //     user.first_name,
+    //     user.last_name,
+    //     user.city,
+    //     user.country,
+    //     user.company_name,
+    //     "User"
+    // )
+    // .execute(pool.get_ref())
+    // .await?;
+
+    insert_user(&pool, user).await?;
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[derive(Debug)]
@@ -118,7 +122,7 @@ impl From<String> for PostUserError {
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
 pub async fn insert_user(pool: &PgPool, user: web::Json<User>) -> Result<(), InsertUserError> {
-    let _hashed_password =
+    let hashed_password =
         compute_password_hash(Secret::new(user.password.clone())).expect("Failed to hash");
     sqlx::query!(
         r#"
@@ -128,8 +132,8 @@ pub async fn insert_user(pool: &PgPool, user: web::Json<User>) -> Result<(), Ins
         uuid::Uuid::new_v4(),
         // user.id,
         user.email,
-        // hashed_password.expose_secret(),
-        user.password,
+        hashed_password.expose_secret(),
+        // user.password,
         user.first_name,
         user.last_name,
         user.city,

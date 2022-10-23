@@ -21,7 +21,7 @@ pub struct Application {
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
         let connection_pool =
-            PgConnection::connect("postgres://postgres:password@localhost:5432/pharmacity-db")
+            PgPool::connect("postgres://postgres:password@localhost:5432/pharmacity-db")
                 .await
                 .expect("Failed to connect to Postgres.");
         // let connection_pool = get_connection_pool(&configuration.database);
@@ -59,7 +59,7 @@ pub fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
 
 async fn run(
     listener: TcpListener,
-    db_pool: PgConnection,
+    db_pool: PgPool,
     hmac_secret: Secret<String>,
 ) -> Result<Server, std::io::Error> {
     let db_pool = Data::new(db_pool);
