@@ -3,8 +3,7 @@ use crate::util::error_chain_fmt;
 use actix_web::error::InternalError;
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
 use actix_web_flash_messages::FlashMessage;
-use hmac::{Hmac, Mac};
-use secrecy::{ExposeSecret, Secret};
+use secrecy::Secret;
 use sqlx::PgPool;
 
 #[derive(serde::Deserialize)]

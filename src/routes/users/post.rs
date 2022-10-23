@@ -3,7 +3,7 @@ use crate::{
     domain::{NewUser, UserEmail, UserString},
 };
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
-use secrecy::{ExposeSecret, Secret};
+use secrecy::Secret;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -39,7 +39,7 @@ impl TryFrom<web::Json<User>> for NewUser {
 }
 
 #[tracing::instrument(
-    name = "Addming a new user",
+    name = "Adding a new user",
     skip(user, pool),
     fields(
         user_email = %user.email,
@@ -50,10 +50,10 @@ pub async fn post_user(
     user: web::Json<User>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostUserError> {
-    let new_user = user.try_into()?;
-    println!("New User {:?}", new_user);
-    insert_user(&pool, &new_user).await?;
-    Ok(HttpResponse::Ok().json(new_user))
+    // let new_user = user.try_into()?;
+    // println!("New User {:?}", new_user);
+    insert_user(&pool, user).await?;
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[derive(Debug)]
@@ -101,23 +101,25 @@ impl From<String> for PostUserError {
 }
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
-pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), InsertUserError> {
-    let hashed_password =
-        compute_password_hash(Secret::new(user.password.inner())).expect("Failed to hash");
+pub async fn insert_user(pool: &PgPool, user: web::Json<User>) -> Result<(), InsertUserError> {
+    let _hashed_password =
+        compute_password_hash(Secret::new(user.password.clone())).expect("Failed to hash");
     sqlx::query!(
         r#"
         INSERT INTO users (id, email, password_hash, first_name, last_name, city, country, company_name, role)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
-        user.id,
-        user.email.as_ref(),
-        hashed_password.expose_secret(),
-        user.first_name.as_ref(),
-        user.last_name.as_ref(),
-        user.city.as_ref(),
-        user.country.inner(),
-        user.company_name.as_ref(),
-        user.role
+        uuid::Uuid::new_v4(),
+        // user.id,
+        user.email,
+        // hashed_password.expose_secret(),
+        user.password,
+        user.first_name,
+        user.last_name,
+        user.city,
+        user.country,
+        user.company_name,
+        "User"
     )
     .execute(pool)
     .await
