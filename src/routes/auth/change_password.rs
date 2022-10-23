@@ -1,4 +1,3 @@
-use crate::authentication::get_stored_credentials;
 use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
     util::e500,
@@ -43,22 +42,11 @@ pub async fn change_password(
         .fetch_optional(&**pool)
         .await;
 
-    // let user_id = match user_id {
-    //     Ok(record) => {
-    //         if record.is_some() {
-    //             record.expect("").id
-    //         } else {
-    //             return Err(e500("The id does not find"));
-    //         }
-    //     }
-    //     Err(e) => return Err(e500(e));
-    // };
-
     let id = user_id.expect("").expect("").id;
 
     crate::authentication::change_password(id, form.new_password.clone(), &pool)
         .await
         .map_err(e500)?;
     FlashMessage::error("Your password has been changed.").send();
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().json(id))
 }

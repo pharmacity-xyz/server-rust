@@ -2,14 +2,14 @@ use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::{
         auth::{change_password::change_password, login::login},
-        health_check,
-        users::post::post_user,
+        get_all_users, health_check,
+        users::post::post_user, update_user,
     },
 };
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
 use actix_web_flash_messages::{storage::CookieMessageStore, FlashMessagesFramework};
 use secrecy::{ExposeSecret, Secret};
-use sqlx::{postgres::PgPoolOptions, Connection, PgConnection, PgPool};
+use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
@@ -24,7 +24,6 @@ impl Application {
             PgPool::connect("postgres://postgres:password@localhost:5432/pharmacity-db")
                 .await
                 .expect("Failed to connect to Postgres.");
-        // let connection_pool = get_connection_pool(&configuration.database);
 
         let address = format!(
             "{}:{}",
@@ -71,9 +70,11 @@ async fn run(
             .wrap(message_framework.clone())
             .wrap(TracingLogger::default())
             .route("/health_check", web::get().to(health_check))
-            .route("/users", web::post().to(post_user))
+            .route("/auth/register", web::post().to(post_user))
             .route("/auth/login", web::post().to(login))
             .route("/auth/change_password", web::post().to(change_password))
+            .route("/users", web::get().to(get_all_users))
+            .route("/users", web::put().to(update_user))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
