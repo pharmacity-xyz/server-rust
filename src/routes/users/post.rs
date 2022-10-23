@@ -1,5 +1,9 @@
-use crate::domain::{NewUser, UserEmail, UserString};
+use crate::{
+    authentication::compute_password_hash,
+    domain::{NewUser, UserEmail, UserString},
+};
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
+use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -47,6 +51,7 @@ pub async fn post_user(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostUserError> {
     let new_user = user.try_into()?;
+    println!("New User {:?}", new_user);
     insert_user(&pool, &new_user).await?;
     Ok(HttpResponse::Ok().json(new_user))
 }
@@ -97,6 +102,8 @@ impl From<String> for PostUserError {
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
 pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), InsertUserError> {
+    let hashed_password =
+        compute_password_hash(Secret::new(user.password.inner())).expect("Failed to hash");
     sqlx::query!(
         r#"
         INSERT INTO users (id, email, password_hash, first_name, last_name, city, country, company_name, role)
@@ -104,11 +111,11 @@ pub async fn insert_user(pool: &PgPool, user: &NewUser) -> Result<(), InsertUser
         "#,
         user.id,
         user.email.as_ref(),
-        user.password.as_ref(),
+        hashed_password.expose_secret(),
         user.first_name.as_ref(),
         user.last_name.as_ref(),
         user.city.as_ref(),
-        user.country.as_ref(),
+        user.country.inner(),
         user.company_name.as_ref(),
         user.role
     )
@@ -136,7 +143,7 @@ impl std::fmt::Display for InsertUserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "A database error was encountered white \
+            "A database error was encountered while \
             trying to store a user"
         )
     }

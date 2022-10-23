@@ -22,7 +22,7 @@ DB_USER=${POSTGRES_USER:=postgres}
 # Check if a custom password has been set, otherwise default to 'password' 
 DB_PASSWORD="${POSTGRES_PASSWORD:=password}"
 # Check if a custom database name has been set, otherwise default to 'pharmacity-db' 
-DB_NAME="${POSTGRES_DB:=pharmavillage}"
+DB_NAME="${POSTGRES_DB:=pharmacity-db}"
 # Check if a custom port has been set, otherwise default to 'pharmacity-db' 
 DB_PORT="${POSTGRES_PORT:=5432}"
 

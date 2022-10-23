@@ -1,7 +1,7 @@
 use uuid::Uuid;
 use validator::validate_email;
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct NewUser {
     pub id: Uuid,
     pub email: UserEmail,
@@ -33,7 +33,7 @@ impl AsRef<str> for UserEmail {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct UserString(String);
 
 impl UserString {
