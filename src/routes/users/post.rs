@@ -4,7 +4,7 @@ use crate::{
 };
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
 use secrecy::Secret;
-use sqlx::PgPool;
+use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -46,14 +46,30 @@ impl TryFrom<web::Json<User>> for NewUser {
         user_first_name = %user.first_name
     )
 )]
-pub async fn post_user(
-    user: web::Json<User>,
-    pool: web::Data<PgPool>,
-) -> Result<HttpResponse, PostUserError> {
+pub async fn post_user(user: web::Json<User>, pool: web::Data<PgConnection>) -> HttpResponse {
     // let new_user = user.try_into()?;
     // println!("New User {:?}", new_user);
-    insert_user(&pool, user).await?;
-    Ok(HttpResponse::Ok().finish())
+    sqlx::query!(
+        r#"
+        INSERT INTO users (id, email, password_hash, first_name, last_name, city, country, company_name, role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        "#,
+        uuid::Uuid::new_v4(),
+        // user.id,
+        user.email,
+        // hashed_password.expose_secret(),
+        user.password,
+        user.first_name,
+        user.last_name,
+        user.city,
+        user.country,
+        user.company_name,
+        "User"
+    )
+    .execute(pool.clone())
+    .await;
+    // insert_user(&pool, user).await?;
+    HttpResponse::Ok().finish()
 }
 
 #[derive(Debug)]

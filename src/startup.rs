@@ -9,7 +9,7 @@ use crate::{
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
 use actix_web_flash_messages::{storage::CookieMessageStore, FlashMessagesFramework};
 use secrecy::{ExposeSecret, Secret};
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{postgres::PgPoolOptions, Connection, PgConnection, PgPool};
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
@@ -20,7 +20,11 @@ pub struct Application {
 
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
-        let connection_pool = get_connection_pool(&configuration.database);
+        let connection_pool =
+            PgConnection::connect("postgres://postgres:password@localhost:5432/pharmacity-db")
+                .await
+                .expect("Failed to connect to Postgres.");
+        // let connection_pool = get_connection_pool(&configuration.database);
 
         let address = format!(
             "{}:{}",
@@ -55,7 +59,7 @@ pub fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
 
 async fn run(
     listener: TcpListener,
-    db_pool: PgPool,
+    db_pool: PgConnection,
     hmac_secret: Secret<String>,
 ) -> Result<Server, std::io::Error> {
     let db_pool = Data::new(db_pool);
