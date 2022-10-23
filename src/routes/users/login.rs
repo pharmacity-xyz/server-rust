@@ -1,4 +1,4 @@
-use crate::auth::{validate_credentials, AuthError, Credentials};
+use crate::authentication::{validate_credentials, AuthError, Credentials};
 use crate::util::error_chain_fmt;
 use actix_web::error::InternalError;
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
