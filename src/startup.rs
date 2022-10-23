@@ -2,7 +2,7 @@ use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::{
         auth::{change_password::change_password, login::login},
-        health_check,
+        get_all_users, health_check,
         users::post::post_user,
     },
 };
@@ -70,9 +70,10 @@ async fn run(
             .wrap(message_framework.clone())
             .wrap(TracingLogger::default())
             .route("/health_check", web::get().to(health_check))
-            .route("/users", web::post().to(post_user))
+            .route("/auth/register", web::post().to(post_user))
             .route("/auth/login", web::post().to(login))
             .route("/auth/change_password", web::post().to(change_password))
+            .route("/users", web::get().to(get_all_users))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
