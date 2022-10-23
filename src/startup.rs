@@ -1,8 +1,9 @@
 use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::{
+        auth::{change_password::change_password, login::login},
         health_check,
-        users::{change_password, login::login, post::post_user},
+        users::post::post_user,
     },
 };
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
