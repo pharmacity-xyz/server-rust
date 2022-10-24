@@ -7,6 +7,7 @@ use crate::{
         products::{
             get_all_products, get_product_by_categoryid, get_product_by_productid, post_product,
         },
+        search_product,
         users::{get_all_users, post_user, update_user},
     },
 };
@@ -89,6 +90,7 @@ async fn run(
                 "/products/category",
                 web::get().to(get_product_by_categoryid),
             )
+            .route("/products/search", web::get().to(search_product))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })

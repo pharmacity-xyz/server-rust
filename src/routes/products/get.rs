@@ -125,3 +125,45 @@ pub async fn get_product_by_categoryid(
 
     Ok(HttpResponse::Ok().json(vec_products))
 }
+
+#[derive(serde::Deserialize)]
+pub struct SearchString {
+    word: String,
+}
+
+pub async fn search_product(
+    pool: web::Data<PgPool>,
+    word: web::Query<SearchString>,
+) -> Result<HttpResponse, GetAllProductsError> {
+    let products = sqlx::query!(
+        r#"
+        SELECT * FROM products
+        "#,
+    )
+    .fetch_all(pool.get_ref())
+    .await
+    .map_err(GetAllProductsError)?;
+
+    let mut vec_products = vec![];
+
+    for product in products.into_iter() {
+        if product
+            .name
+            .to_lowercase()
+            .contains(word.word.to_lowercase().as_str())
+        {
+            let temp_product = Product {
+                id: product.id,
+                name: product.name,
+                description: product.description,
+                image_url: product.image_url,
+                stock: product.stock,
+                price: product.price,
+                category_id: product.category_id,
+            };
+            vec_products.push(temp_product);
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(vec_products))
+}
