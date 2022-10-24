@@ -2,8 +2,14 @@ use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::{
         auth::{change_password::change_password, login::login},
-        get_all_users, health_check,
-        users::post::post_user, update_user, post_category, get_categories, update_category,
+        categories::{get_categories, post_category, update_category},
+        health_check,
+        products::{
+            get_all_products, get_featured_products, get_product_by_categoryid,
+            get_product_by_productid, post_product,
+        },
+        search_product,
+        users::{get_all_users, post_user, update_user}, update_product,
     },
 };
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
@@ -78,6 +84,16 @@ async fn run(
             .route("/categories", web::post().to(post_category))
             .route("/categories", web::get().to(get_categories))
             .route("/categories", web::put().to(update_category))
+            .route("/products", web::post().to(post_product))
+            .route("/products", web::get().to(get_all_products))
+            .route("/products/product", web::get().to(get_product_by_productid))
+            .route(
+                "/products/category",
+                web::get().to(get_product_by_categoryid),
+            )
+            .route("/products/featured", web::get().to(get_featured_products))
+            .route("/products/search", web::get().to(search_product))
+            .route("/products", web::put().to(update_product))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
