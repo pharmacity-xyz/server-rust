@@ -54,16 +54,21 @@ impl std::fmt::Display for GetAllProductsError {
     }
 }
 
+#[derive(serde::Deserialize)]
+pub struct ProductId {
+    id: uuid::Uuid,
+}
+
 pub async fn get_product_by_productid(
     pool: web::Data<PgPool>,
-    product_id: web::Query<uuid::Uuid>,
+    product_id: web::Query<ProductId>,
 ) -> Result<HttpResponse, GetAllProductsError> {
     let product = sqlx::query!(
         r#"
         SELECT * FROM products
         WHERE id = $1
         "#,
-        product_id.0
+        product_id.id
     )
     .fetch_one(pool.get_ref())
     .await

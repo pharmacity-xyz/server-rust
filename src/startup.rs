@@ -82,10 +82,7 @@ async fn run(
             .route("/categories", web::put().to(update_category))
             .route("/products", web::post().to(post_product))
             .route("/products", web::get().to(get_all_products))
-            .route(
-                "/products/{product_id}",
-                web::get().to(get_product_by_productid),
-            )
+            .route("/products", web::get().to(get_product_by_productid))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
