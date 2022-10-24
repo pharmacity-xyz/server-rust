@@ -4,7 +4,9 @@ use crate::{
         auth::{change_password::change_password, login::login},
         categories::{get_categories, post_category, update_category},
         health_check,
-        products::{get_all_products, get_product_by_productid, post_product},
+        products::{
+            get_all_products, get_product_by_categoryid, get_product_by_productid, post_product,
+        },
         users::{get_all_users, post_user, update_user},
     },
 };
@@ -83,6 +85,10 @@ async fn run(
             .route("/products", web::post().to(post_product))
             .route("/products", web::get().to(get_all_products))
             .route("/products", web::get().to(get_product_by_productid))
+            .route(
+                "/products/category",
+                web::get().to(get_product_by_categoryid),
+            )
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
