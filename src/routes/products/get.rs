@@ -172,3 +172,35 @@ pub async fn search_product(
 
     Ok(HttpResponse::Ok().json(vec_products))
 }
+
+pub async fn get_featured_products(
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, GetAllProductsError> {
+    let products = sqlx::query!(
+        r#"
+        SELECT * FROM products
+        WHERE featured = true
+        "#,
+    )
+    .fetch_all(pool.get_ref())
+    .await
+    .map_err(GetAllProductsError)?;
+
+    let mut vec_products = vec![];
+
+    for product in products.into_iter() {
+        let temp_product = Product {
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            image_url: product.image_url,
+            stock: product.stock,
+            price: product.price,
+            category_id: product.category_id,
+            featured: product.featured.expect(""),
+        };
+        vec_products.push(temp_product);
+    }
+
+    Ok(HttpResponse::Ok().json(vec_products))
+}

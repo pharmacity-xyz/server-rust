@@ -5,10 +5,11 @@ use crate::{
         categories::{get_categories, post_category, update_category},
         health_check,
         products::{
-            get_all_products, get_product_by_categoryid, get_product_by_productid, post_product,
+            get_all_products, get_featured_products, get_product_by_categoryid,
+            get_product_by_productid, post_product,
         },
         search_product,
-        users::{get_all_users, post_user, update_user},
+        users::{get_all_users, post_user, update_user}, update_product,
     },
 };
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
@@ -90,7 +91,9 @@ async fn run(
                 "/products/category",
                 web::get().to(get_product_by_categoryid),
             )
+            .route("/products/featured", web::get().to(get_featured_products))
             .route("/products/search", web::get().to(search_product))
+            .route("/products", web::put().to(update_product))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
