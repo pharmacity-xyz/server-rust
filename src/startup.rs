@@ -8,8 +8,8 @@ use crate::{
             get_all_products, get_featured_products, get_product_by_categoryid,
             get_product_by_productid, post_product,
         },
-        search_product,
-        users::{get_all_users, post_user, update_user}, update_product,
+        search_product, update_product,
+        users::{get_all_users, post_user, update_user},
     },
 };
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
