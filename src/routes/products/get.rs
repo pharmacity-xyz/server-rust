@@ -96,26 +96,32 @@ pub async fn get_product_by_categoryid(
     pool: web::Data<PgPool>,
     category_id: web::Query<CategoryId>,
 ) -> Result<HttpResponse, GetAllProductsError> {
-    let product = sqlx::query!(
+    let products = sqlx::query!(
         r#"
         SELECT * FROM products
         WHERE category_id = $1
         "#,
         category_id.id
     )
-    .fetch_one(pool.get_ref())
+    .fetch_all(pool.get_ref())
     .await
     .map_err(GetAllProductsError)?;
 
-    let temp_product = Product {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        image_url: product.image_url,
-        stock: product.stock,
-        price: product.price,
-        category_id: product.category_id,
-    };
+    let mut vec_products = vec![];
 
-    Ok(HttpResponse::Ok().json(temp_product))
+    for product in products.into_iter() {
+        let temp_product = Product {
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            image_url: product.image_url,
+            stock: product.stock,
+            price: product.price,
+            category_id: product.category_id,
+        };
+
+        vec_products.push(temp_product);
+    }
+
+    Ok(HttpResponse::Ok().json(vec_products))
 }
