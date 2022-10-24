@@ -6,6 +6,7 @@ pub struct Cart {
     user_id: uuid::Uuid,
     product_id: uuid::Uuid,
     quantity: i32,
+    id: uuid::Uuid,
 }
 
 pub async fn get_all_carts(pool: web::Data<PgPool>) -> Result<HttpResponse, GetAllCartsError> {
@@ -25,6 +26,7 @@ pub async fn get_all_carts(pool: web::Data<PgPool>) -> Result<HttpResponse, GetA
             user_id: cart.user_id,
             product_id: cart.product_id,
             quantity: cart.quantity,
+            id: cart.id,
         };
 
         vec_carts.push(temp_cart);

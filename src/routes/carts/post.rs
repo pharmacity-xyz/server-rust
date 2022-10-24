@@ -14,12 +14,13 @@ pub async fn post_cart(
 ) -> Result<HttpResponse, PostCartError> {
     sqlx::query!(
         r#"
-        INSERT INTO carts (user_id, product_id, quantity)
-        VALUES ($1, $2, $3)
+        INSERT INTO carts (user_id, product_id, quantity, id)
+        VALUES ($1, $2, $3, $4)
         "#,
         cart.user_id,
         cart.product_id,
-        cart.quantity
+        cart.quantity,
+        uuid::Uuid::new_v4(),
     )
     .execute(pool.get_ref())
     .await
