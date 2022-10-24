@@ -17,8 +17,8 @@ pub async fn post_product(
 ) -> Result<HttpResponse, PostProductError> {
     sqlx::query!(
         r#"
-        INSERT INTO products (id, name, description, image_url, stock, price, category_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO products (id, name, description, image_url, stock, price, category_id, featured)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, false)
         "#,
         uuid::Uuid::new_v4(),
         product.name,

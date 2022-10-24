@@ -10,6 +10,7 @@ pub struct Product {
     stock: i32,
     price: i32,
     category_id: uuid::Uuid,
+    featured: bool,
 }
 
 pub async fn get_all_products(
@@ -35,6 +36,7 @@ pub async fn get_all_products(
             stock: product.stock,
             price: product.price,
             category_id: product.category_id,
+            featured: product.featured.expect(""),
         };
 
         vec_products.push(temp_product);
@@ -82,6 +84,7 @@ pub async fn get_product_by_productid(
         stock: product.stock,
         price: product.price,
         category_id: product.category_id,
+        featured: product.featured.expect(""),
     };
 
     Ok(HttpResponse::Ok().json(temp_product))
@@ -118,6 +121,7 @@ pub async fn get_product_by_categoryid(
             stock: product.stock,
             price: product.price,
             category_id: product.category_id,
+            featured: product.featured.expect(""),
         };
 
         vec_products.push(temp_product);
@@ -160,6 +164,7 @@ pub async fn search_product(
                 stock: product.stock,
                 price: product.price,
                 category_id: product.category_id,
+                featured: product.featured.expect(""),
             };
             vec_products.push(temp_product);
         }
