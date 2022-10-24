@@ -2,7 +2,7 @@ use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::{
         auth::{change_password::change_password, login::login},
-        carts::post_cart,
+        carts::{get_all_carts, post_cart},
         categories::{get_categories, post_category, update_category},
         health_check,
         products::{
@@ -95,6 +95,7 @@ async fn run(
             .route("/products/search", web::get().to(search_product))
             .route("/products", web::put().to(update_product))
             .route("/carts", web::post().to(post_cart))
+            .route("/carts", web::get().to(get_all_carts))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
