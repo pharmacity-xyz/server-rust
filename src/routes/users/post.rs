@@ -5,6 +5,7 @@ use crate::{
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
+use stripe::{Client, CreateCustomer, Customer, StripeError};
 use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -101,6 +102,32 @@ impl From<String> for PostUserError {
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
 pub async fn insert_user(pool: &PgPool, user: web::Json<User>) -> Result<(), InsertUserError> {
+    let secret_key = std::env::var("STRIPE_SECRET_KEY").expect("Missing STRIPE_SECRET_KEY in env");
+    let client = Client::new(secret_key);
+
+    let name = format!("{} {}", user.first_name, user.last_name);
+
+    let customer = Customer::create(
+        &client,
+        CreateCustomer {
+            name: Some(name.as_ref()),
+            email: Some(user.email.as_ref()),
+            description: Some(
+                "A fake customer that is used to illustrate the examples in async-stripe",
+            ),
+            metadata: Some(
+                [("async-stripe".to_string(), "true".to_string())]
+                    .iter()
+                    .cloned()
+                    .collect(),
+            ),
+
+            ..Default::default()
+        },
+    )
+    .await
+    .map_err(InsertUserError::CreateCustomerStripeError)?;
+
     let hashed_password =
         compute_password_hash(Secret::new(user.password.clone())).expect("Failed to hash");
     sqlx::query!(
@@ -109,10 +136,8 @@ pub async fn insert_user(pool: &PgPool, user: web::Json<User>) -> Result<(), Ins
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
         uuid::Uuid::new_v4(),
-        // user.id,
         user.email,
         hashed_password.expose_secret(),
-        // user.password,
         user.first_name,
         user.last_name,
         user.city,
@@ -122,21 +147,25 @@ pub async fn insert_user(pool: &PgPool, user: web::Json<User>) -> Result<(), Ins
     )
     .execute(pool)
     .await
-    .map_err(InsertUserError)?;
+    .map_err(InsertUserError::SqlxError)?;
+
     Ok(())
 }
 
-pub struct InsertUserError(sqlx::Error);
-
-impl std::error::Error for InsertUserError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(&self.0)
-    }
+pub enum InsertUserError {
+    SqlxError(sqlx::Error),
+    CreateCustomerStripeError(StripeError),
 }
+
+//impl std::error::Error for InsertUserError {
+//    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+//        Some(&self.0)
+//    }
+//}
 
 impl std::fmt::Debug for InsertUserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}\nCaused by:\n\t{}", self, self.0)
+        write!(f, "\nCaused by:\n\t{}", self)
     }
 }
 

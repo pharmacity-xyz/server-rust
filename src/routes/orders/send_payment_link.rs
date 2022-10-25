@@ -1,6 +1,13 @@
-use stripe::{CreatePaymentLink, CreatePaymentLinkLineItems, PaymentLink};
+use actix_web::{web, HttpResponse, ResponseError};
+use sqlx::PgPool;
+use stripe::{
+    Client, CreatePaymentLink, CreatePaymentLinkLineItems, CreatePrice, CreateProduct, Currency,
+    IdOrCreate, PaymentLink, Price, Product,
+};
 
-pub async fn send_payment_link(_pool: web::Data<PgPool>) -> Result<HttpResponse, PostProductError> {
+pub async fn send_payment_link(
+    _pool: web::Data<PgPool>,
+) -> Result<HttpResponse, SendPaymentLinkError> {
     let secret_key = std::env::var("STRIPE_SECRET_KEY").expect("Missing STRIPE_SECRET_KEY in env");
     let client = Client::new(secret_key);
 
@@ -51,12 +58,12 @@ pub async fn send_payment_link(_pool: web::Data<PgPool>) -> Result<HttpResponse,
 }
 
 #[derive(Debug)]
-pub struct PostProductError(sqlx::Error);
+pub struct SendPaymentLinkError(sqlx::Error);
 
-impl ResponseError for PostProductError {}
+impl ResponseError for SendPaymentLinkError {}
 
-impl std::fmt::Display for PostProductError {
+impl std::fmt::Display for SendPaymentLinkError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Failed to post products.")
+        write!(f, "Failed to send payment link.")
     }
 }
