@@ -1,9 +1,11 @@
+use dotenv::dotenv;
 use pharmacity::configuration::get_configuration;
 use pharmacity::startup::Application;
 use pharmacity::telemetry::{get_subscriber, init_subscriber};
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
     let subscriber = get_subscriber("pharmacity".into(), "info".into());
     init_subscriber(subscriber);
 
