@@ -47,25 +47,6 @@ pub enum PostUserError {
     StripeInsertionError(StripeError),
 }
 
-#[tracing::instrument(
-    name = "Adding a new user",
-    skip(user, pool),
-    fields(
-        user_email = %user.email,
-        user_first_name = %user.first_name
-    )
-)]
-pub async fn post_user(
-    user: web::Json<User>,
-    pool: web::Data<PgPool>,
-) -> Result<HttpResponse, PostUserError> {
-    // let new_user = user.try_into()?;
-    insert_user_to_stripe(&user).await?;
-    let new_customer = insert_user_to_db(&pool, &user).await?;
-
-    Ok(HttpResponse::Ok().json(new_customer))
-}
-
 impl std::fmt::Display for PostUserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Failed to create a new user.")
@@ -84,17 +65,31 @@ impl From<sqlx::Error> for PostUserError {
     }
 }
 
-// impl From<InsertUserError> for PostUserError {
-//     fn from(e: InsertUserError) -> Self {
-//         Self::InsertUserError(e)
-//     }
-// }
-
 impl From<String> for PostUserError {
     fn from(e: String) -> Self {
         Self::ValidationError(e)
     }
 }
+
+#[tracing::instrument(
+    name = "Adding a new user",
+    skip(user, pool),
+    fields(
+        user_email = %user.email,
+        user_first_name = %user.first_name
+    )
+)]
+pub async fn post_user(
+    user: web::Json<User>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, PostUserError> {
+    // let new_user = user.try_into()?;
+    let new_customer = insert_user_to_stripe(&user).await?;
+    insert_user_to_db(&pool, &user).await?;
+
+    Ok(HttpResponse::Ok().json(new_customer))
+}
+
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
 async fn insert_user_to_db(pool: &PgPool, user: &web::Json<User>) -> Result<(), PostUserError> {
@@ -123,6 +118,7 @@ async fn insert_user_to_db(pool: &PgPool, user: &web::Json<User>) -> Result<(), 
     Ok(())
 }
 
+#[tracing::instrument(name = "Saving new user details in the stripe", skip(user))]
 async fn insert_user_to_stripe(user: &web::Json<User>) -> Result<Customer, PostUserError> {
     let secret_key =
         std::env::var("STRIPE_SECRET_KEY").expect("Can not find stripe secret key in env");
@@ -154,31 +150,4 @@ async fn insert_user_to_stripe(user: &web::Json<User>) -> Result<Customer, PostU
     Ok(customer)
 }
 
-// pub enum UserToStripeError {
-//     EnvVarError(VarError),
-//     CreateCustomerStripeError(StripeError),
-// }
 
-//impl std::error::Error for InsertUserError {
-//    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-//        Some(&self.0)
-//    }
-//}
-
-// impl std::fmt::Debug for InsertUserError {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "\nCaused by:\n\t{}", self)
-//     }
-// }
-// 
-// impl std::fmt::Display for InsertUserError {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(
-//             f,
-//             "A database error was encountered while \
-//             trying to store a user"
-//         )
-//     }
-// }
-// 
-// impl ResponseError for InsertUserError {}
