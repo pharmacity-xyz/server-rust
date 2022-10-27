@@ -60,14 +60,11 @@ pub async fn get_stored_credentials(
     email: &str,
     pool: &PgPool,
 ) -> Result<Option<(String, Secret<String>)>, anyhow::Error> {
-    let row = sqlx::query!(
-        r#"SELECT id, password FROM users WHERE email = $1"#,
-        email,
-    )
-    .fetch_optional(pool)
-    .await
-    .context("Failed to performed a query to retrieve stored credentials")?
-    .map(|row| (row.id, Secret::new(row.password)));
+    let row = sqlx::query!(r#"SELECT id, password FROM users WHERE email = $1"#, email,)
+        .fetch_optional(pool)
+        .await
+        .context("Failed to performed a query to retrieve stored credentials")?
+        .map(|row| (row.id, Secret::new(row.password)));
     Ok(row)
 }
 
