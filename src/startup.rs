@@ -26,8 +26,9 @@ pub struct Application {
 
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
+        let database_url = std::env::var("DATABASE_URL").expect("Failed to read database url in env");
         let connection_pool =
-            PgPool::connect("postgres://postgres:password@localhost:5432/pharmacity-db")
+            PgPool::connect(database_url.as_str())
                 .await
                 .expect("Failed to connect to Postgres.");
 
