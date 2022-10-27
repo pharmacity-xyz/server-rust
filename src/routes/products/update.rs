@@ -32,7 +32,9 @@ pub async fn update_product(
     product: web::Json<RequestProduct>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, UpdateProductError> {
-    Ok(HttpResponse::Ok().finish())
+    let updated_product = update_product_for_stripe(&product).await?;
+    update_product_for_db(&product, pool).await?;
+    Ok(HttpResponse::Ok().json(updated_product))
 }
 
 async fn update_product_for_stripe(
