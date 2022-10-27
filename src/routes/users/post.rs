@@ -2,7 +2,7 @@ use crate::{
     authentication::compute_password_hash,
     domain::{NewUser, UserEmail, UserString},
 };
-use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
+use actix_web::{web, HttpResponse, ResponseError};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 use stripe::{Client, CreateCustomer, Customer, StripeError};
@@ -39,6 +39,35 @@ impl TryFrom<web::Json<User>> for NewUser {
     }
 }
 
+#[derive(Debug)]
+pub enum PostUserError {
+    ValidationError(String),
+    DatabaseError(sqlx::Error),
+    StripeInsertionError(StripeError),
+}
+
+impl std::fmt::Display for PostUserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Failed to create a new user.")
+    }
+}
+
+impl std::error::Error for PostUserError {}
+
+impl ResponseError for PostUserError {}
+
+impl From<sqlx::Error> for PostUserError {
+    fn from(e: sqlx::Error) -> Self {
+        Self::DatabaseError(e)
+    }
+}
+
+impl From<String> for PostUserError {
+    fn from(e: String) -> Self {
+        Self::ValidationError(e)
+    }
+}
+
 #[tracing::instrument(
     name = "Adding a new user",
     skip(user, pool),
@@ -52,57 +81,16 @@ pub async fn post_user(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostUserError> {
     // let new_user = user.try_into()?;
-    insert_user(&pool, user).await?;
-    Ok(HttpResponse::Ok().finish())
+    let new_customer = insert_user_to_stripe(&user).await?;
+    insert_user_to_db(&pool, new_customer.id.as_str(), &user).await?;
+
+    Ok(HttpResponse::Ok().json(new_customer))
 }
 
-#[derive(Debug)]
-pub enum PostUserError {
-    ValidationError(String),
-    DatabaseError(sqlx::Error),
-    InsertUserError(InsertUserError),
-}
-
-impl std::fmt::Display for PostUserError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Failed to create a new user.")
-    }
-}
-
-impl std::error::Error for PostUserError {}
-
-impl ResponseError for PostUserError {
-    fn status_code(&self) -> StatusCode {
-        match self {
-            PostUserError::ValidationError(_) => StatusCode::BAD_REQUEST,
-            PostUserError::DatabaseError(_) | PostUserError::InsertUserError(_) => {
-                StatusCode::INTERNAL_SERVER_ERROR
-            }
-        }
-    }
-}
-
-impl From<sqlx::Error> for PostUserError {
-    fn from(e: sqlx::Error) -> Self {
-        Self::DatabaseError(e)
-    }
-}
-
-impl From<InsertUserError> for PostUserError {
-    fn from(e: InsertUserError) -> Self {
-        Self::InsertUserError(e)
-    }
-}
-
-impl From<String> for PostUserError {
-    fn from(e: String) -> Self {
-        Self::ValidationError(e)
-    }
-}
-
-#[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
-pub async fn insert_user(pool: &PgPool, user: web::Json<User>) -> Result<(), InsertUserError> {
-    let secret_key = std::env::var("STRIPE_SECRET_KEY").expect("Missing STRIPE_SECRET_KEY in env");
+#[tracing::instrument(name = "Saving new user details in the stripe", skip(user))]
+async fn insert_user_to_stripe(user: &web::Json<User>) -> Result<Customer, PostUserError> {
+    let secret_key =
+        std::env::var("STRIPE_SECRET_KEY").expect("Can not find stripe secret key in env");
     let client = Client::new(secret_key);
 
     let name = format!("{} {}", user.first_name, user.last_name);
@@ -126,16 +114,26 @@ pub async fn insert_user(pool: &PgPool, user: web::Json<User>) -> Result<(), Ins
         },
     )
     .await
-    .map_err(InsertUserError::CreateCustomerStripeError)?;
+    .map_err(PostUserError::StripeInsertionError)?;
 
+    Ok(customer)
+}
+
+#[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
+async fn insert_user_to_db(
+    pool: &PgPool,
+    user_id: &str,
+    user: &web::Json<User>,
+) -> Result<(), PostUserError> {
     let hashed_password =
         compute_password_hash(Secret::new(user.password.clone())).expect("Failed to hash");
+
     sqlx::query!(
         r#"
-        INSERT INTO users (id, email, password_hash, first_name, last_name, city, country, company_name, role)
+        INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
-        uuid::Uuid::new_v4(),
+        user_id,
         user.email,
         hashed_password.expose_secret(),
         user.first_name,
@@ -147,36 +145,7 @@ pub async fn insert_user(pool: &PgPool, user: web::Json<User>) -> Result<(), Ins
     )
     .execute(pool)
     .await
-    .map_err(InsertUserError::SqlxError)?;
+    .map_err(PostUserError::DatabaseError)?;
 
     Ok(())
 }
-
-pub enum InsertUserError {
-    SqlxError(sqlx::Error),
-    CreateCustomerStripeError(StripeError),
-}
-
-//impl std::error::Error for InsertUserError {
-//    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-//        Some(&self.0)
-//    }
-//}
-
-impl std::fmt::Debug for InsertUserError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "\nCaused by:\n\t{}", self)
-    }
-}
-
-impl std::fmt::Display for InsertUserError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "A database error was encountered while \
-            trying to store a user"
-        )
-    }
-}
-
-impl ResponseError for InsertUserError {}

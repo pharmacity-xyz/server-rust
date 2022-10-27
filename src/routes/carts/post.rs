@@ -3,8 +3,8 @@ use sqlx::PgPool;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Cart {
-    user_id: uuid::Uuid,
-    product_id: uuid::Uuid,
+    user_id: String,
+    product_id: String,
     quantity: i32,
 }
 
@@ -14,13 +14,13 @@ pub async fn post_cart(
 ) -> Result<HttpResponse, PostCartError> {
     sqlx::query!(
         r#"
-        INSERT INTO carts (user_id, product_id, quantity, id)
+        INSERT INTO carts (id, user_id, product_id, quantity)
         VALUES ($1, $2, $3, $4)
         "#,
+        uuid::Uuid::new_v4(),
         cart.user_id,
         cart.product_id,
         cart.quantity,
-        uuid::Uuid::new_v4(),
     )
     .execute(pool.get_ref())
     .await

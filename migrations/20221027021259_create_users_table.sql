@@ -1,6 +1,6 @@
 -- Add migration script here
 CREATE TABLE users(
-	id uuid NOT NULL,
+	id TEXT NOT NULL,
 	PRIMARY KEY (id),
 	email TEXT NOT NULL UNIQUE, 
 	password TEXT NOT NULL,

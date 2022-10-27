@@ -44,9 +44,9 @@ pub async fn change_password(
 
     let id = user_id.expect("").expect("").id;
 
-    crate::authentication::change_password(id, form.new_password.clone(), &pool)
+    crate::authentication::change_password(id.clone(), form.new_password.clone(), &pool)
         .await
         .map_err(e500)?;
     FlashMessage::error("Your password has been changed.").send();
-    Ok(HttpResponse::Ok().json(id))
+    Ok(HttpResponse::Ok().json(id.clone()))
 }

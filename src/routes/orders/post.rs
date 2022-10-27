@@ -42,20 +42,20 @@ pub async fn post_order(_pool: web::Data<PgPool>) -> Result<HttpResponse, PostPr
         price.currency.unwrap()
     );
 
-//    let checkout_session = {
-//        let mut params =
-//            CreateCheckoutSession::new("http://test.com/cancel", "http://test.com/success");
-//        params.customer = Some(customer.id);
-//        params.mode = Some(CheckoutSessionMode::Payment);
-//        params.line_items = Some(vec![CreateCheckoutSessionLineItems {
-//            quantity: Some(3),
-//            price: Some(price.id.to_string()),
-//            ..Default::default()
-//        }]);
-//        params.expand = &["line_items", "line_items.data.price.product"];
-//
-//        CheckoutSession::create(&client, params).await.unwrap()
-//    };
+    //    let checkout_session = {
+    //        let mut params =
+    //            CreateCheckoutSession::new("http://test.com/cancel", "http://test.com/success");
+    //        params.customer = Some(customer.id);
+    //        params.mode = Some(CheckoutSessionMode::Payment);
+    //        params.line_items = Some(vec![CreateCheckoutSessionLineItems {
+    //            quantity: Some(3),
+    //            price: Some(price.id.to_string()),
+    //            ..Default::default()
+    //        }]);
+    //        params.expand = &["line_items", "line_items.data.price.product"];
+    //
+    //        CheckoutSession::create(&client, params).await.unwrap()
+    //    };
 
     //println!(
     //    "created a {} checkout session for {} {:?} for {} {} at {}",
