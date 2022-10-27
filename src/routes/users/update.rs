@@ -3,7 +3,7 @@ use sqlx::PgPool;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct User {
-    id: uuid::Uuid,
+    id: String,
     email: String,
     password: String,
     first_name: String,

@@ -59,15 +59,15 @@ pub fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::
 pub async fn get_stored_credentials(
     email: &str,
     pool: &PgPool,
-) -> Result<Option<(uuid::Uuid, Secret<String>)>, anyhow::Error> {
+) -> Result<Option<(String, Secret<String>)>, anyhow::Error> {
     let row = sqlx::query!(
-        r#"SELECT id, password_hash FROM users WHERE email = $1"#,
+        r#"SELECT id, password FROM users WHERE email = $1"#,
         email,
     )
     .fetch_optional(pool)
     .await
     .context("Failed to performed a query to retrieve stored credentials")?
-    .map(|row| (row.id, Secret::new(row.password_hash)));
+    .map(|row| (row.id, Secret::new(row.password)));
     Ok(row)
 }
 
@@ -75,7 +75,7 @@ pub async fn get_stored_credentials(
 pub async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
-) -> Result<uuid::Uuid, AuthError> {
+) -> Result<String, AuthError> {
     let mut user_id = None;
     let mut expected_password_hash = Secret::new(
         "$argon2id$v=19$m=15000,t=2,p=1$\
@@ -124,7 +124,7 @@ fn verify_password_hash(
 
 #[tracing::instrument(name = "Change password", skip(user_id, password, pool))]
 pub async fn change_password(
-    user_id: uuid::Uuid,
+    user_id: String,
     password: Secret<String>,
     pool: &PgPool,
 ) -> Result<(), anyhow::Error> {
@@ -134,7 +134,7 @@ pub async fn change_password(
     sqlx::query!(
         r#"
         UPDATE users
-        SET password_hash = $1
+        SET password = $1
         WHERE id = $2
         "#,
         password_hash.expose_secret(),

@@ -3,10 +3,10 @@ use sqlx::PgPool;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Cart {
-    user_id: uuid::Uuid,
-    product_id: uuid::Uuid,
-    quantity: i32,
     id: uuid::Uuid,
+    user_id: String,
+    product_id: String,
+    quantity: i32,
 }
 
 pub async fn get_all_carts(pool: web::Data<PgPool>) -> Result<HttpResponse, GetAllCartsError> {
@@ -23,10 +23,10 @@ pub async fn get_all_carts(pool: web::Data<PgPool>) -> Result<HttpResponse, GetA
 
     for cart in carts.into_iter() {
         let temp_cart = Cart {
+            id: cart.id,
             user_id: cart.user_id,
             product_id: cart.product_id,
             quantity: cart.quantity,
-            id: cart.id,
         };
 
         vec_carts.push(temp_cart);

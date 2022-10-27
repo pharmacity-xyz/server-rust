@@ -3,7 +3,7 @@ use sqlx::PgPool;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Product {
-    id: uuid::Uuid,
+    id: String,
     name: String,
     description: String,
     image_url: String,

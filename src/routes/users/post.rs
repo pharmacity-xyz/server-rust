@@ -2,10 +2,9 @@ use crate::{
     authentication::compute_password_hash,
     domain::{NewUser, UserEmail, UserString},
 };
-use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
+use actix_web::{web, HttpResponse, ResponseError};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
-use std::env::{var, VarError};
 use stripe::{Client, CreateCustomer, Customer, StripeError};
 use uuid::Uuid;
 
@@ -55,9 +54,7 @@ impl std::fmt::Display for PostUserError {
 
 impl std::error::Error for PostUserError {}
 
-impl ResponseError for PostUserError {
-    
-}
+impl ResponseError for PostUserError {}
 
 impl From<sqlx::Error> for PostUserError {
     fn from(e: sqlx::Error) -> Self {
@@ -85,37 +82,9 @@ pub async fn post_user(
 ) -> Result<HttpResponse, PostUserError> {
     // let new_user = user.try_into()?;
     let new_customer = insert_user_to_stripe(&user).await?;
-    insert_user_to_db(&pool, &user).await?;
+    insert_user_to_db(&pool, new_customer.id.as_str(), &user).await?;
 
     Ok(HttpResponse::Ok().json(new_customer))
-}
-
-
-#[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
-async fn insert_user_to_db(pool: &PgPool, user: &web::Json<User>) -> Result<(), PostUserError> {
-    let hashed_password =
-        compute_password_hash(Secret::new(user.password.clone())).expect("Failed to hash");
-
-    sqlx::query!(
-        r#"
-        INSERT INTO users (id, email, password_hash, first_name, last_name, city, country, company_name, role)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        "#,
-        uuid::Uuid::new_v4(),
-        user.email,
-        hashed_password.expose_secret(),
-        user.first_name,
-        user.last_name,
-        user.city,
-        user.country,
-        user.company_name,
-        "User"
-    )
-    .execute(pool)
-    .await
-    .map_err(PostUserError::DatabaseError)?;
-
-    Ok(())
 }
 
 #[tracing::instrument(name = "Saving new user details in the stripe", skip(user))]
@@ -150,4 +119,33 @@ async fn insert_user_to_stripe(user: &web::Json<User>) -> Result<Customer, PostU
     Ok(customer)
 }
 
+#[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
+async fn insert_user_to_db(
+    pool: &PgPool,
+    user_id: &str,
+    user: &web::Json<User>,
+) -> Result<(), PostUserError> {
+    let hashed_password =
+        compute_password_hash(Secret::new(user.password.clone())).expect("Failed to hash");
 
+    sqlx::query!(
+        r#"
+        INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        "#,
+        user_id,
+        user.email,
+        hashed_password.expose_secret(),
+        user.first_name,
+        user.last_name,
+        user.city,
+        user.country,
+        user.company_name,
+        "User"
+    )
+    .execute(pool)
+    .await
+    .map_err(PostUserError::DatabaseError)?;
+
+    Ok(())
+}

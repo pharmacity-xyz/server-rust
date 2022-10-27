@@ -3,7 +3,7 @@ use sqlx::PgPool;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Product {
-    id: uuid::Uuid,
+    id: String,
     name: String,
     description: String,
     image_url: String,
@@ -36,7 +36,7 @@ pub async fn get_all_products(
             stock: product.stock,
             price: product.price,
             category_id: product.category_id,
-            featured: product.featured.expect(""),
+            featured: product.featured,
         };
 
         vec_products.push(temp_product);
@@ -52,13 +52,13 @@ impl ResponseError for GetAllProductsError {}
 
 impl std::fmt::Display for GetAllProductsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Failed to get all categories.")
+        write!(f, "Failed to get all products.")
     }
 }
 
 #[derive(serde::Deserialize)]
 pub struct ProductId {
-    id: uuid::Uuid,
+    id: String,
 }
 
 pub async fn get_product_by_productid(
@@ -84,7 +84,7 @@ pub async fn get_product_by_productid(
         stock: product.stock,
         price: product.price,
         category_id: product.category_id,
-        featured: product.featured.expect(""),
+        featured: product.featured,
     };
 
     Ok(HttpResponse::Ok().json(temp_product))
@@ -121,7 +121,7 @@ pub async fn get_product_by_categoryid(
             stock: product.stock,
             price: product.price,
             category_id: product.category_id,
-            featured: product.featured.expect(""),
+            featured: product.featured,
         };
 
         vec_products.push(temp_product);
@@ -164,7 +164,7 @@ pub async fn search_product(
                 stock: product.stock,
                 price: product.price,
                 category_id: product.category_id,
-                featured: product.featured.expect(""),
+                featured: product.featured,
             };
             vec_products.push(temp_product);
         }
@@ -197,7 +197,7 @@ pub async fn get_featured_products(
             stock: product.stock,
             price: product.price,
             category_id: product.category_id,
-            featured: product.featured.expect(""),
+            featured: product.featured,
         };
         vec_products.push(temp_product);
     }
