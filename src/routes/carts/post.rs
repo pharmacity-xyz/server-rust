@@ -35,6 +35,6 @@ impl ResponseError for PostCartError {}
 
 impl std::fmt::Display for PostCartError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Failed to post carts.")
+        write!(f, "Failed to post carts")
     }
 }
