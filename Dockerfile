@@ -1,30 +1,16 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1.59.0 as chef
+FROM rust:1.59.0 AS builder
+
 WORKDIR /app
 RUN apt update && apt install lld clang -y
-
-FROM chef as planner
-COPY . .
-# Compute a lock-file for our project
-RUN cargo chef prepare --recipe-path recipe.json
-
-FROM chef as builder
-COPY --from=planner /app/recipe.json recipe.json
-# Build our project dependencies, not our application
-RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 ENV SQLX_OFFLINE true
-RUN cargo build --release --bin pharmacity
+RUN cargo build --release
 
-# Runtime stage
-FROM debian:bullseye-slim AS runtime
+FROM rust:1.59.0 AS runtime
+
 WORKDIR /app
-
-RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends openssl ca-certificates \
-    && apt-get autoremove \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/pharmacity pharmacity
 COPY configuration configuration
 ENV APP_ENVIRONMENT production
+ENV STRIPE_SECRET_KEY sk_test_51Lt6NAGlVubd39S7721SdXDerAaaGPYD4oovoDhRKiXJASrObodzE9uUYavkk7ztBpgMdECUsjvNJSSA6jhD5wqA00CKYcuGlO
 ENTRYPOINT ["./pharmacity"]
