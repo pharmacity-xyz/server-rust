@@ -12,9 +12,9 @@ use crate::{
         users::{get_all_users, post_user, update_user},
     },
 };
-use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
-use actix_web_flash_messages::{storage::CookieMessageStore, FlashMessagesFramework};
 use actix_cors::Cors;
+use actix_web::{cookie::Key, dev::Server, http::header, web, web::Data, App, HttpServer};
+use actix_web_flash_messages::{storage::CookieMessageStore, FlashMessagesFramework};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::net::TcpListener;
@@ -74,7 +74,13 @@ async fn run(
             .wrap(message_framework.clone())
             .wrap(TracingLogger::default())
             .wrap(
-                Cors::default().allowed_origin("http://localhost:3000")
+                Cors::default()
+                    .allowed_origin("http://localhost:3000")
+                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+                    .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
+                    .allowed_header(header::CONTENT_TYPE)
+                    .supports_credentials()
+                    .max_age(3600),
             )
             .route("/health_check", web::get().to(health_check))
             .route("/auth/register", web::post().to(post_user))

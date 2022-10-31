@@ -29,7 +29,8 @@ impl DatabaseSettings {
             .host(&self.host)
             .username(&self.username)
             .password(self.password.expose_secret())
-            .port(self.port).database(&self.database_name);
+            .port(self.port)
+            .database(&self.database_name);
         options.log_statements(tracing::log::LevelFilter::Trace);
         options
     }
