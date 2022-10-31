@@ -69,7 +69,7 @@ async fn update_product_for_stripe(
 }
 async fn update_product_for_db(
     product: &web::Json<RequestProduct>,
-    pool: web::Data<PgPool>
+    pool: web::Data<PgPool>,
 ) -> Result<(), UpdateProductError> {
     sqlx::query!(
         r#"

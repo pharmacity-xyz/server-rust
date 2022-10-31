@@ -26,11 +26,7 @@ pub struct Application {
 
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
-        let database_url = std::env::var("DATABASE_URL").expect("Failed to read database url in env");
-        let connection_pool =
-            PgPool::connect(database_url.as_str())
-                .await
-                .expect("Failed to connect to Postgres.");
+        let connection_pool = get_connection_pool(&configuration.database);
 
         let address = format!(
             "{}:{}",
@@ -59,7 +55,7 @@ impl Application {
 
 pub fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
     PgPoolOptions::new()
-        .acquire_timeout(std::time::Duration::from_secs(2))
+        .acquire_timeout(std::time::Duration::from_secs(10))
         .connect_lazy_with(configuration.with_db())
 }
 
