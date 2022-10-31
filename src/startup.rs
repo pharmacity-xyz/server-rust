@@ -14,6 +14,7 @@ use crate::{
 };
 use actix_web::{cookie::Key, dev::Server, web, web::Data, App, HttpServer};
 use actix_web_flash_messages::{storage::CookieMessageStore, FlashMessagesFramework};
+use actix_cors::Cors;
 use secrecy::{ExposeSecret, Secret};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::net::TcpListener;
@@ -72,6 +73,9 @@ async fn run(
         App::new()
             .wrap(message_framework.clone())
             .wrap(TracingLogger::default())
+            .wrap(
+                Cors::default().allowed_origin("http://localhost:3000")
+            )
             .route("/health_check", web::get().to(health_check))
             .route("/auth/register", web::post().to(post_user))
             .route("/auth/login", web::post().to(login))
