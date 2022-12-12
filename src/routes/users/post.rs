@@ -1,6 +1,7 @@
 use crate::{
     authentication::compute_password_hash,
     domain::{NewUser, UserEmail, UserString},
+    response::ServiceResponse,
 };
 use actix_web::{web, HttpResponse, ResponseError};
 use secrecy::{ExposeSecret, Secret};
@@ -12,6 +13,7 @@ use uuid::Uuid;
 pub struct User {
     email: String,
     password: String,
+    confirm_password: String,
     first_name: String,
     last_name: String,
     city: String,
@@ -80,11 +82,13 @@ pub async fn post_user(
     user: web::Json<User>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostUserError> {
-    // let new_user = user.try_into()?;
-    let new_customer = insert_user_to_stripe(&user).await?;
-    insert_user_to_db(&pool, new_customer.id.as_str(), &user).await?;
+    let user_id = insert_user_to_db(&pool, &user).await?;
 
-    Ok(HttpResponse::Ok().json(new_customer))
+    Ok(HttpResponse::Ok().json(ServiceResponse {
+        data: user_id,
+        success: true,
+        message: "".to_string(),
+    }))
 }
 
 #[tracing::instrument(name = "Saving new user details in the stripe", skip(user))]
@@ -120,20 +124,18 @@ async fn insert_user_to_stripe(user: &web::Json<User>) -> Result<Customer, PostU
 }
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
-async fn insert_user_to_db(
-    pool: &PgPool,
-    user_id: &str,
-    user: &web::Json<User>,
-) -> Result<(), PostUserError> {
+async fn insert_user_to_db(pool: &PgPool, user: &web::Json<User>) -> Result<Uuid, PostUserError> {
     let hashed_password =
         compute_password_hash(Secret::new(user.password.clone())).expect("Failed to hash");
+
+    let user_id = Uuid::new_v4();
 
     sqlx::query!(
         r#"
         INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
-        user_id,
+        format!("{}", user_id.clone()),
         user.email,
         hashed_password.expose_secret(),
         user.first_name,
@@ -147,5 +149,5 @@ async fn insert_user_to_db(
     .await
     .map_err(PostUserError::DatabaseError)?;
 
-    Ok(())
+    Ok(user_id)
 }
