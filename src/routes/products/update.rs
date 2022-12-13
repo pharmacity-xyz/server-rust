@@ -1,17 +1,6 @@
+use crate::types::product::Product;
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct RequestProduct {
-    id: String,
-    name: String,
-    description: String,
-    image_url: String,
-    stock: i32,
-    price: f32,
-    category_id: uuid::Uuid,
-    featured: bool,
-}
 
 #[derive(Debug)]
 pub enum UpdateProductError {
@@ -28,7 +17,7 @@ impl std::fmt::Display for UpdateProductError {
 }
 
 pub async fn update_product(
-    product: web::Json<RequestProduct>,
+    product: web::Json<Product>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, UpdateProductError> {
     // let updated_product = update_product_for_stripe(&product).await?;
@@ -37,7 +26,7 @@ pub async fn update_product(
 }
 
 async fn update_product_for_db(
-    product: &web::Json<RequestProduct>,
+    product: &web::Json<Product>,
     pool: web::Data<PgPool>,
 ) -> Result<(), UpdateProductError> {
     sqlx::query!(
@@ -53,7 +42,7 @@ async fn update_product_for_db(
         product.price,
         product.category_id,
         product.featured,
-        product.id,
+        product.product_id,
     )
     .execute(pool.get_ref())
     .await

@@ -1,6 +1,7 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use bigdecimal::BigDecimal;
 use sqlx::PgPool;
+use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct RequestProduct {
@@ -31,12 +32,12 @@ pub async fn post_product(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostProductError> {
     // let new_product = insert_product_to_stripe(&product).await?;
-    insert_product_to_db("", &product, pool).await?;
+    insert_product_to_db(Uuid::new_v4(), &product, pool).await?;
     Ok(HttpResponse::Ok().json(""))
 }
 
 async fn insert_product_to_db(
-    product_id: &str,
+    product_id: Uuid,
     product: &web::Json<RequestProduct>,
     pool: web::Data<PgPool>,
 ) -> Result<(), PostProductError> {

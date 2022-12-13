@@ -87,7 +87,7 @@ async fn update_user_for_db(
         user.city,
         user.country,
         user.company_name,
-        user.id
+        user.user_id
     )
     .execute(pool.get_ref())
     .await
