@@ -79,7 +79,7 @@ async fn update_user_for_db(
         r#"
         UPDATE users
         SET email = $1, first_name = $2, last_name = $3, city = $4, country = $5, company_name = $6
-        WHERE id = $7
+        WHERE user_id = $7
         "#,
         user.email,
         user.first_name,

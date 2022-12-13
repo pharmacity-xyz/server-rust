@@ -1,4 +1,5 @@
 use actix_web::{web, HttpResponse, ResponseError};
+use bigdecimal::BigDecimal;
 use sqlx::PgPool;
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -7,7 +8,7 @@ pub struct RequestProduct {
     description: String,
     image_url: String,
     stock: i32,
-    price: i32,
+    price: BigDecimal,
     category_id: uuid::Uuid,
 }
 

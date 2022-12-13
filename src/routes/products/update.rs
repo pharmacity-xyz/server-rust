@@ -8,7 +8,7 @@ pub struct RequestProduct {
     description: String,
     image_url: String,
     stock: i32,
-    price: i32,
+    price: f32,
     category_id: uuid::Uuid,
     featured: bool,
 }

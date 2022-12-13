@@ -35,7 +35,7 @@ pub async fn get_all_products(
             image_url: product.image_url,
             stock: product.stock,
             price: product.price,
-            category_id: product.category_id.unwrap().category_id,
+            category_id: product.category_id.unwrap(),
             featured: product.featured,
         };
 
@@ -83,7 +83,7 @@ pub async fn get_product_by_productid(
         image_url: product.image_url,
         stock: product.stock,
         price: product.price,
-        category_id: product.category_id.unwrap().category_id,
+        category_id: product.category_id.unwrap(),
         featured: product.featured,
     };
 
@@ -120,7 +120,7 @@ pub async fn get_product_by_categoryid(
             image_url: product.image_url,
             stock: product.stock,
             price: product.price,
-            category_id: product.category_id.unwrap().category_id,
+            category_id: product.category_id.unwrap(),
             featured: product.featured,
         };
 
@@ -163,7 +163,7 @@ pub async fn search_product(
                 image_url: product.image_url,
                 stock: product.stock,
                 price: product.price,
-                category_id: product.category_id.unwrap().category_id,
+                category_id: product.category_id.unwrap(),
                 featured: product.featured,
             };
             vec_products.push(temp_product);
@@ -196,7 +196,7 @@ pub async fn get_featured_products(
             image_url: product.image_url,
             stock: product.stock,
             price: product.price,
-            category_id: product.category_id.unwrap().category_id,
+            category_id: product.category_id.unwrap(),
             featured: product.featured,
         };
         vec_products.push(temp_product);
