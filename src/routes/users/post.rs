@@ -1,6 +1,7 @@
 use crate::{
     authentication::compute_password_hash,
     domain::{NewUser, UserEmail, UserString},
+    request::PostUser,
     response::ServiceResponse,
     types::user::User,
 };
@@ -13,7 +14,6 @@ use uuid::Uuid;
 pub enum PostUserError {
     ValidationError(String),
     DatabaseError(sqlx::Error),
-    // StripeInsertionError(StripeError),
 }
 
 impl std::fmt::Display for PostUserError {
@@ -47,7 +47,7 @@ impl From<String> for PostUserError {
     )
 )]
 pub async fn post_user(
-    user: web::Json<User>,
+    user: web::Json<PostUser>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostUserError> {
     let user_id = insert_user_to_db(&pool, &user).await?;
@@ -60,16 +60,20 @@ pub async fn post_user(
 }
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
-async fn insert_user_to_db(pool: &PgPool, user: &web::Json<User>) -> Result<Uuid, PostUserError> {
+async fn insert_user_to_db(
+    pool: &PgPool,
+    user: &web::Json<PostUser>,
+) -> Result<Uuid, PostUserError> {
     let hashed_password =
         compute_password_hash(Secret::new(user.password.clone())).expect("Failed to hash");
 
     let user_id = Uuid::new_v4();
 
-    sqlx::query!(
+    let user_id = sqlx::query!(
         r#"
         INSERT INTO users (user_id, email, password, first_name, last_name, city, country, company_name, role)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+        RETURNING user_id
         "#,
         user_id.clone(),
         user.email,
@@ -81,9 +85,10 @@ async fn insert_user_to_db(pool: &PgPool, user: &web::Json<User>) -> Result<Uuid
         user.company_name,
         "User"
     )
-    .execute(pool)
+    .fetch_one(pool)
     .await
-    .map_err(PostUserError::DatabaseError)?;
+    .map_err(PostUserError::DatabaseError)?
+    .user_id;
 
     Ok(user_id)
 }

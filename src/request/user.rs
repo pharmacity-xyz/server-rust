@@ -1,4 +1,6 @@
-use crate::types::user::User;
+use crate::domain::{NewUser, UserEmail, UserString};
+use actix_web::web;
+use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct PostUser {
@@ -12,12 +14,12 @@ pub struct PostUser {
     pub company_name: String,
 }
 
-impl TryFrom<web::Json<User>> for NewUser {
+impl TryFrom<web::Json<PostUser>> for NewUser {
     type Error = String;
 
-    fn try_from(value: web::Json<User>) -> Result<Self, Self::Error> {
+    fn try_from(value: web::Json<PostUser>) -> Result<Self, Self::Error> {
         let new_user = NewUser {
-            id: Uuid::new_v4(),
+            user_id: Uuid::new_v4(),
             email: UserEmail::parse(value.email.clone())?,
             password: UserString::parse(value.password.clone())?,
             first_name: UserString::parse(value.first_name.clone())?,
