@@ -1,4 +1,7 @@
-use crate::types::user::User;
+use crate::{
+    domain::{UserEmail, UserString},
+    types::user::User,
+};
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
@@ -12,13 +15,13 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> Result<HttpResponse, GetA
     for user in users.into_iter() {
         let temp_user = User {
             user_id: user.user_id,
-            email: user.email,
-            password: user.password,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            city: user.city,
-            country: user.country,
-            company_name: user.company_name,
+            email: UserEmail::from(user.email),
+            password: UserString::from(user.password),
+            first_name: UserString::from(user.first_name),
+            last_name: UserString::from(user.last_name),
+            city: UserString::from(user.city),
+            country: UserString::from(user.country),
+            company_name: UserString::from(user.company_name),
             role: user.role,
         };
 

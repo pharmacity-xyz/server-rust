@@ -1,11 +1,12 @@
-use crate::types::user::User;
+use crate::{request::UpdateUser, response::ServiceResponse, types::user::User};
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
+use uuid::Uuid;
 
 #[derive(Debug)]
 pub enum UpdateUserError {
+    ValidationError(String),
     DatabaseError(sqlx::Error),
-    // StripeUpdateError(StripeError),
 }
 
 impl ResponseError for UpdateUserError {}
@@ -16,77 +17,55 @@ impl std::fmt::Display for UpdateUserError {
     }
 }
 
-#[tracing::instrument(name = "Updating user", skip(user, pool))]
-pub async fn update_user(
-    user: web::Json<User>,
-    pool: web::Data<PgPool>,
-) -> Result<HttpResponse, UpdateUserError> {
-    // let updated_customer = update_user_for_stripe(&user).await?;
-    update_user_for_db(&user, pool).await?;
+impl std::error::Error for UpdateUserError {}
 
-    Ok(HttpResponse::Ok().json(""))
+impl From<String> for UpdateUserError {
+    fn from(e: String) -> Self {
+        Self::ValidationError(e)
+    }
 }
 
-// #[tracing::instrument(name = "Update user in stripe", skip(user))]
-// async fn update_user_for_stripe(user: &web::Json<User>) -> Result<Customer, UpdateUserError> {
-//     let secret_key =
-//         std::env::var("STRIPE_SECRET_KEY").expect("Can not find stripe secret key in env");
-//     let client = Client::new(secret_key);
+#[tracing::instrument(name = "Updating user", skip(user, pool))]
+pub async fn update_user(
+    user: web::Json<UpdateUser>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, UpdateUserError> {
+    let mut res = ServiceResponse::new(Uuid::default());
+    let update_user: User;
 
-//     let customers = Customer::list(
-//         &client,
-//         ListCustomers {
-//             email: Some(user.email.as_str()),
-//             ..Default::default()
-//         },
-//     )
-//     .await
-//     .unwrap();
+    match User::try_from(user) {
+        Ok(u) => update_user = u,
+        Err(e) => {
+            res.message = e.to_string();
+            return Err(UpdateUserError::ValidationError(e.to_string()));
+        }
+    };
 
-//     let name = format!("{} {}", user.first_name, user.last_name);
+    match update_user_for_db(&update_user, pool).await {
+        Ok(_) => {}
+        Err(e) => {
+            res.message = e.to_string();
+            return Err(e);
+        }
+    }
 
-//     let customer = Customer::update(
-//         &client,
-//         &customers.data[0].id,
-//         UpdateCustomer {
-//             name: Some(name.as_ref()),
-//             email: Some(user.email.as_ref()),
-//             description: Some(
-//                 "A fake customer that is used to illustrate the examples in async-stripe",
-//             ),
-//             metadata: Some(
-//                 [("async-stripe".to_string(), "true".to_string())]
-//                     .iter()
-//                     .cloned()
-//                     .collect(),
-//             ),
-
-//             ..Default::default()
-//         },
-//     )
-//     .await
-//     .map_err(UpdateUserError::StripeUpdateError)?;
-
-//     Ok(customer)
-// }
+    Ok(HttpResponse::Ok().json(res))
+}
 
 #[tracing::instrument(name = "Update user in db", skip(user))]
-async fn update_user_for_db(
-    user: &web::Json<User>,
-    pool: web::Data<PgPool>,
-) -> Result<(), UpdateUserError> {
+async fn update_user_for_db(user: &User, pool: web::Data<PgPool>) -> Result<(), UpdateUserError> {
     sqlx::query!(
         r#"
         UPDATE users
         SET email = $1, first_name = $2, last_name = $3, city = $4, country = $5, company_name = $6
         WHERE user_id = $7
         "#,
-        user.email,
-        user.first_name,
-        user.last_name,
-        user.city,
-        user.country,
-        user.company_name,
+        user.email.inner(),
+        user.first_name.inner(),
+        user.last_name.inner(),
+        user.city.inner(),
+        user.country.inner(),
+        user.company_name.inner(),
         user.user_id
     )
     .execute(pool.get_ref())

@@ -18,12 +18,26 @@ pub struct NewUser {
 pub struct UserEmail(String);
 
 impl UserEmail {
-    pub fn parse(s: String) -> Result<UserEmail, String> {
+    pub fn parse_with_validation(s: String) -> Result<UserEmail, String> {
         if validate_email(&s) {
             Ok(Self(s))
         } else {
             Err(format!("{} is not a valid user email.", s))
         }
+    }
+
+    pub fn inner(&self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn inner_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<String> for UserEmail {
+    fn from(s: String) -> Self {
+        Self(s)
     }
 }
 
@@ -37,7 +51,7 @@ impl AsRef<str> for UserEmail {
 pub struct UserString(String);
 
 impl UserString {
-    pub fn parse(s: String) -> Result<UserString, String> {
+    pub fn parse_with_validation(s: String) -> Result<UserString, String> {
         let is_empty_or_whitespace = s.trim().is_empty();
 
         if is_empty_or_whitespace {
@@ -59,5 +73,11 @@ impl UserString {
 impl AsRef<str> for UserString {
     fn as_ref(&self) -> &str {
         &self.0
+    }
+}
+
+impl From<String> for UserString {
+    fn from(s: String) -> Self {
+        Self(s)
     }
 }

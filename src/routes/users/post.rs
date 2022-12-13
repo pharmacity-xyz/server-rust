@@ -1,8 +1,5 @@
 use crate::{
-    authentication::compute_password_hash,
-    domain::{NewUser, UserEmail, UserString},
-    request::PostUser,
-    response::ServiceResponse,
+    authentication::compute_password_hash, request::PostUser, response::ServiceResponse,
     types::user::User,
 };
 use actix_web::{web, HttpResponse, ResponseError};
@@ -18,11 +15,9 @@ pub enum PostUserError {
 
 impl std::fmt::Display for PostUserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Failed to create a new user.")
+        write!(f, "Fail to create user")
     }
 }
-
-impl std::error::Error for PostUserError {}
 
 impl ResponseError for PostUserError {}
 
@@ -50,24 +45,31 @@ pub async fn post_user(
     user: web::Json<PostUser>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostUserError> {
-    let user_id = insert_user_to_db(&pool, &user).await?;
+    let mut res = ServiceResponse::new(Uuid::default());
 
-    Ok(HttpResponse::Ok().json(ServiceResponse {
-        data: user_id,
-        success: true,
-        message: "".to_string(),
-    }))
+    let new_user = match User::try_from(user) {
+        Ok(new_user) => new_user,
+        Err(e) => {
+            res.message = e.to_string();
+            return Err(e);
+        }
+    };
+
+    match insert_user_to_db(&pool, &new_user).await {
+        Ok(user_id) => {
+            res.data = user_id;
+            res.success = true;
+        }
+        Err(e) => res.message = e.to_string(),
+    };
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
-async fn insert_user_to_db(
-    pool: &PgPool,
-    user: &web::Json<PostUser>,
-) -> Result<Uuid, PostUserError> {
+async fn insert_user_to_db(pool: &PgPool, user: &User) -> Result<Uuid, PostUserError> {
     let hashed_password =
-        compute_password_hash(Secret::new(user.password.clone())).expect("Failed to hash");
-
-    let user_id = Uuid::new_v4();
+        compute_password_hash(Secret::new(user.password.inner())).expect("Failed to hash");
 
     let user_id = sqlx::query!(
         r#"
@@ -75,15 +77,15 @@ async fn insert_user_to_db(
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
         RETURNING user_id
         "#,
-        user_id.clone(),
-        user.email,
+        user.user_id,
+        user.email.inner(),
         hashed_password.expose_secret(),
-        user.first_name,
-        user.last_name,
-        user.city,
-        user.country,
-        user.company_name,
-        "User"
+        user.first_name.inner(),
+        user.last_name.inner(),
+        user.city.inner(),
+        user.country.inner(),
+        user.company_name.inner(),
+        user.role,
     )
     .fetch_one(pool)
     .await
