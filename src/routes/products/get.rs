@@ -1,17 +1,7 @@
+use crate::types::product::Product;
 use actix_web::{web, HttpResponse, ResponseError};
+use bigdecimal::BigDecimal;
 use sqlx::PgPool;
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct Product {
-    product_id: uuid::Uuid,
-    name: String,
-    description: String,
-    image_url: String,
-    stock: i32,
-    price: f32,
-    category_id: uuid::Uuid,
-    featured: bool,
-}
 
 pub async fn get_all_products(
     pool: web::Data<PgPool>,
