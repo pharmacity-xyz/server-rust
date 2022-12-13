@@ -1,3 +1,4 @@
+use crate::response::ServiceResponse;
 use crate::util::error_chain_fmt;
 use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
@@ -20,6 +21,7 @@ pub async fn login(
     credential: web::Json<FormData>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, InternalError<LoginError>> {
+    let mut res = ServiceResponse::new(String::default());
     let credentials = Credentials {
         email: credential.email.clone(),
         password: credential.password.clone(),
@@ -31,8 +33,10 @@ pub async fn login(
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
 
             let token = create_jwt(user_id, user_role);
+            res.data = token;
+            res.success = true;
 
-            Ok(HttpResponse::Ok().json(token))
+            Ok(HttpResponse::Ok().json(res))
         }
         Err(e) => {
             let e = match e {
