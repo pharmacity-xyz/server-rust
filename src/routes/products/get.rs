@@ -1,6 +1,5 @@
 use crate::types::product::Product;
 use actix_web::{web, HttpResponse, ResponseError};
-use bigdecimal::BigDecimal;
 use sqlx::PgPool;
 
 pub async fn get_all_products(

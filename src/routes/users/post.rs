@@ -94,35 +94,3 @@ async fn insert_user_to_db(pool: &PgPool, user: &User) -> Result<Uuid, PostUserE
 
     Ok(user_id)
 }
-
-// #[tracing::instrument(name = "Saving new user details in the stripe", skip(user))]
-// async fn insert_user_to_stripe(user: &web::Json<User>) -> Result<Customer, PostUserError> {
-//     let secret_key =
-//         std::env::var("STRIPE_SECRET_KEY").expect("Can not find stripe secret key in env");
-//     let client = Client::new(secret_key);
-
-//     let name = format!("{} {}", user.first_name, user.last_name);
-
-//     let customer = Customer::create(
-//         &client,
-//         CreateCustomer {
-//             name: Some(name.as_ref()),
-//             email: Some(user.email.as_ref()),
-//             description: Some(
-//                 "A fake customer that is used to illustrate the examples in async-stripe",
-//             ),
-//             metadata: Some(
-//                 [("async-stripe".to_string(), "true".to_string())]
-//                     .iter()
-//                     .cloned()
-//                     .collect(),
-//             ),
-
-//             ..Default::default()
-//         },
-//     )
-//     .await
-//     .map_err(PostUserError::StripeInsertionError)?;
-
-//     Ok(customer)
-// }
