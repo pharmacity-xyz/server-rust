@@ -1,13 +1,6 @@
 -- Add migration script here
-CREATE TABLE carts (
-	id uuid NOT NULL,
-    user_id TEXT NOT NULL,
-    CONSTRAINT fk_user
-        FOREIGN KEY(user_id)
-            REFERENCEs users(id),
-    product_id TEXT NOT NULL,
-    CONSTRAINT fk_product
-        FOREIGN KEY(product_id)
-            REFERENCEs products(id),
+CREATE TABLE cart_items (
+	user_id uuid NOT NULL REFERENCES users (user_id),
+    product_id uuid NOT NULL REFERENCES products (product_id),
     quantity INT NOT NULL
 );

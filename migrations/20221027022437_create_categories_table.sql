@@ -1,6 +1,5 @@
 -- Add migration script here
 CREATE TABLE categories(
-    id uuid NOT NULL,
-    PRIMARY KEY (id),
+    category_id uuid PRIMARY KEY,
     name TEXT NOT NULL
 );
