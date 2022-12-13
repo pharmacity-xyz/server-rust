@@ -1,4 +1,5 @@
 pub mod authentication;
+pub mod authorization;
 pub mod configuration;
 pub mod domain;
 pub mod request;

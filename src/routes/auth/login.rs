@@ -1,5 +1,8 @@
-use crate::authentication::{validate_credentials, AuthError, Credentials};
 use crate::util::error_chain_fmt;
+use crate::{
+    authentication::{validate_credentials, AuthError, Credentials},
+    authorization::create_jwt,
+};
 use actix_web::error::InternalError;
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
 use actix_web_flash_messages::FlashMessage;
@@ -24,9 +27,12 @@ pub async fn login(
     tracing::Span::current().record("email", &tracing::field::display(&credentials.email));
 
     match validate_credentials(credentials, &pool).await {
-        Ok(user_id) => {
+        Ok((user_id, user_role)) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
-            Ok(HttpResponse::Ok().json(user_id))
+
+            let token = create_jwt(user_id, user_role);
+
+            Ok(HttpResponse::Ok().json(token))
         }
         Err(e) => {
             let e = match e {
