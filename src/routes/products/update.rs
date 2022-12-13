@@ -43,8 +43,8 @@ async fn update_product_for_db(
     sqlx::query!(
         r#"
         UPDATE products 
-        SET name = $1, description = $2, image_url = $3, stock = $4, price = $5, category_id = $6, featured = $7
-        WHERE id = $8
+        SET product_name = $1, product_description = $2, image_url = $3, stock = $4, price = $5, category_id = $6, featured = $7
+        WHERE product_id = $8
         "#,
         product.name,
         product.description,
@@ -61,7 +61,6 @@ async fn update_product_for_db(
 
     Ok(())
 }
-
 
 // async fn update_product_for_stripe(
 //     product: &web::Json<RequestProduct>,

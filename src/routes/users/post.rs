@@ -9,26 +9,6 @@ use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-impl TryFrom<web::Json<User>> for NewUser {
-    type Error = String;
-
-    fn try_from(value: web::Json<User>) -> Result<Self, Self::Error> {
-        let new_user = NewUser {
-            id: Uuid::new_v4(),
-            email: UserEmail::parse(value.email.clone())?,
-            password: UserString::parse(value.password.clone())?,
-            first_name: UserString::parse(value.first_name.clone())?,
-            last_name: UserString::parse(value.last_name.clone())?,
-            city: UserString::parse(value.city.clone())?,
-            country: UserString::parse(value.country.clone())?,
-            company_name: UserString::parse(value.company_name.clone())?,
-            role: "User".to_string(),
-        };
-
-        Ok(new_user)
-    }
-}
-
 #[derive(Debug)]
 pub enum PostUserError {
     ValidationError(String),
@@ -139,5 +119,3 @@ async fn insert_user_to_db(pool: &PgPool, user: &web::Json<User>) -> Result<Uuid
 
 //     Ok(customer)
 // }
-
-

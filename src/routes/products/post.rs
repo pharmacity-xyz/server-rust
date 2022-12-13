@@ -41,7 +41,7 @@ async fn insert_product_to_db(
 ) -> Result<(), PostProductError> {
     sqlx::query!(
         r#"
-        INSERT INTO products (id, name, description, image_url, stock, price, category_id, featured)
+        INSERT INTO products (product_id, product_name, product_description, image_url, stock, price, category_id, featured)
         VALUES ($1, $2, $3, $4, $5, $6, $7, false)
         "#,
         product_id,
@@ -80,5 +80,3 @@ async fn insert_product_to_db(
 
 //     Ok(product)
 // }
-
-

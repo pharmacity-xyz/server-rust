@@ -2,23 +2,23 @@ use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct Category {
-    id: uuid::Uuid,
+pub struct UpdateCategory {
+    category_id: uuid::Uuid,
     name: String,
 }
 
 pub async fn update_category(
-    category: web::Json<Category>,
+    category: web::Json<UpdateCategory>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, UpdateCategoryError> {
     sqlx::query!(
         r#"
         UPDATE categories 
         SET name = $1
-        WHERE id = $2
+        WHERE category_id = $2
         "#,
         category.name,
-        category.id
+        category.category_id
     )
     .execute(pool.get_ref())
     .await

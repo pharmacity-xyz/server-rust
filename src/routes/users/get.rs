@@ -1,18 +1,6 @@
+use crate::types::user::User;
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct User {
-    id: String,
-    email: String,
-    password: String,
-    first_name: String,
-    last_name: String,
-    city: String,
-    country: String,
-    company_name: String,
-    role: String,
-}
 
 pub async fn get_all_users(pool: web::Data<PgPool>) -> Result<HttpResponse, GetAllUsersError> {
     let users = sqlx::query!(r#"SELECT * FROM users"#)
@@ -23,7 +11,7 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> Result<HttpResponse, GetA
     let mut vec_user = vec![];
     for user in users.into_iter() {
         let temp_user = User {
-            id: user.id,
+            user_id: user.user_id,
             email: user.email,
             password: user.password,
             first_name: user.first_name,

@@ -1,3 +1,4 @@
+use crate::types::user::User;
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 

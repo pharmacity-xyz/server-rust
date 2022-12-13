@@ -42,7 +42,7 @@ pub async fn change_password(
         .fetch_optional(&**pool)
         .await;
 
-    let id = user_id.expect("").expect("").id;
+    let id = user_id.expect("").expect("").user_id;
 
     crate::authentication::change_password(id.clone(), form.new_password.clone(), &pool)
         .await
