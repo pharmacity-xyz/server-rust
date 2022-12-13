@@ -6,7 +6,6 @@ use crate::{
 use actix_web::{web, HttpResponse, ResponseError};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
-use stripe::{Client, CreateCustomer, Customer, StripeError};
 use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -45,7 +44,7 @@ impl TryFrom<web::Json<User>> for NewUser {
 pub enum PostUserError {
     ValidationError(String),
     DatabaseError(sqlx::Error),
-    StripeInsertionError(StripeError),
+    // StripeInsertionError(StripeError),
 }
 
 impl std::fmt::Display for PostUserError {
