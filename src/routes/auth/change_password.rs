@@ -38,7 +38,7 @@ pub async fn change_password(
             AuthError::UnexpectedError(_) => Err(e500(e)),
         };
     }
-    let user_id = sqlx::query!(r#"SELECT id FROM users WHERE email = $1"#, form.email)
+    let user_id = sqlx::query!(r#"SELECT user_id FROM users WHERE email = $1"#, form.email)
         .fetch_optional(&**pool)
         .await;
 

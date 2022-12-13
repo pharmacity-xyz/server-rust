@@ -14,10 +14,9 @@ pub async fn post_cart(
 ) -> Result<HttpResponse, PostCartError> {
     sqlx::query!(
         r#"
-        INSERT INTO carts (id, user_id, product_id, quantity)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO cart_items (user_id, product_id, quantity)
+        VALUES ($1, $2, $3)
         "#,
-        uuid::Uuid::new_v4(),
         cart.user_id,
         cart.product_id,
         cart.quantity,

@@ -2,23 +2,12 @@ use crate::{
     authentication::compute_password_hash,
     domain::{NewUser, UserEmail, UserString},
     response::ServiceResponse,
+    types::user::User,
 };
 use actix_web::{web, HttpResponse, ResponseError};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 use uuid::Uuid;
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct User {
-    email: String,
-    password: String,
-    confirm_password: String,
-    first_name: String,
-    last_name: String,
-    city: String,
-    country: String,
-    company_name: String,
-}
 
 impl TryFrom<web::Json<User>> for NewUser {
     type Error = String;
@@ -99,10 +88,10 @@ async fn insert_user_to_db(pool: &PgPool, user: &web::Json<User>) -> Result<Uuid
 
     sqlx::query!(
         r#"
-        INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)
+        INSERT INTO users (user_id, email, password, first_name, last_name, city, country, company_name, role)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         "#,
-        format!("{}", user_id.clone()),
+        user_id.clone(),
         user.email,
         hashed_password.expose_secret(),
         user.first_name,

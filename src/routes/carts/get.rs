@@ -1,18 +1,18 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
+use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Cart {
-    id: uuid::Uuid,
-    user_id: String,
-    product_id: String,
+    user_id: Uuid,
+    product_id: Uuid,
     quantity: i32,
 }
 
 pub async fn get_all_carts(pool: web::Data<PgPool>) -> Result<HttpResponse, GetAllCartsError> {
     let carts = sqlx::query!(
         r#"
-        SELECT * FROM carts
+        SELECT * FROM cart_items
         "#
     )
     .fetch_all(pool.get_ref())
@@ -23,7 +23,6 @@ pub async fn get_all_carts(pool: web::Data<PgPool>) -> Result<HttpResponse, GetA
 
     for cart in carts.into_iter() {
         let temp_cart = Cart {
-            id: cart.id,
             user_id: cart.user_id,
             product_id: cart.product_id,
             quantity: cart.quantity,

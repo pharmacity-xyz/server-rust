@@ -13,7 +13,7 @@ pub async fn update_cart(
 ) -> Result<HttpResponse, UpdateCartError> {
     sqlx::query!(
         r#"
-        UPDATE carts 
+        UPDATE cart_items 
         SET quantity = $1
         WHERE id = $2
         "#,

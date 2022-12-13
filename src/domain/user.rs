@@ -3,7 +3,7 @@ use validator::validate_email;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct NewUser {
-    pub id: Uuid,
+    pub user_id: Uuid,
     pub email: UserEmail,
     pub password: UserString,
     pub first_name: UserString,

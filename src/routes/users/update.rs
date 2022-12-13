@@ -1,19 +1,6 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct User {
-    id: String,
-    email: String,
-    password: String,
-    first_name: String,
-    last_name: String,
-    city: String,
-    country: String,
-    company_name: String,
-    role: String,
-}
-
 #[derive(Debug)]
 pub enum UpdateUserError {
     DatabaseError(sqlx::Error),
