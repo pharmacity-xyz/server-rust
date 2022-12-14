@@ -49,15 +49,14 @@ pub fn parse_jwt(token: String) -> Result<(Uuid, String), Error> {
 
     let validation = Validation::new(Algorithm::HS256);
 
-    if validation.validate_exp {
-        return Err(ErrorKind::ExpiredSignature.into());
-    }
+    // if validation.validate_exp {
+    //     return Err(ErrorKind::ExpiredSignature.into());
+    // }
 
     let token_data = match decode::<Claims>(&token, &DecodingKey::from_secret(key), &validation) {
         Ok(c) => c,
         Err(err) => match *err.kind() {
-            ErrorKind::InvalidToken => panic!("Token is invalid"), // Example on how to handle a specific error
-            ErrorKind::InvalidIssuer => panic!("Issuer is invalid"), // Example on how to handle a specific error
+            ErrorKind::InvalidToken => return Err(ErrorKind::InvalidToken.into()), // Example on how to handle a specific error
             _ => panic!("Some other errors"),
         },
     };
