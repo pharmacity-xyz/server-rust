@@ -8,6 +8,6 @@ Develop the server for medical equipment site.
 - Migration: sqlx
 
 ## DB
-- crazy_hawking
+- beautiful_bassi
 
 

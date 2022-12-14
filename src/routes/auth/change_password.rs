@@ -38,11 +38,11 @@ pub async fn change_password(
             AuthError::UnexpectedError(_) => Err(e500(e)),
         };
     }
-    let user_id = sqlx::query!(r#"SELECT id FROM users WHERE email = $1"#, form.email)
+    let user_id = sqlx::query!(r#"SELECT user_id FROM users WHERE email = $1"#, form.email)
         .fetch_optional(&**pool)
         .await;
 
-    let id = user_id.expect("").expect("").id;
+    let id = user_id.expect("").expect("").user_id;
 
     crate::authentication::change_password(id.clone(), form.new_password.clone(), &pool)
         .await

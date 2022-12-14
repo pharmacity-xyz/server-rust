@@ -59,12 +59,15 @@ pub fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::
 pub async fn get_stored_credentials(
     email: &str,
     pool: &PgPool,
-) -> Result<Option<(String, Secret<String>)>, anyhow::Error> {
-    let row = sqlx::query!(r#"SELECT id, password FROM users WHERE email = $1"#, email,)
-        .fetch_optional(pool)
-        .await
-        .context("Failed to performed a query to retrieve stored credentials")?
-        .map(|row| (row.id, Secret::new(row.password)));
+) -> Result<Option<(uuid::Uuid, Secret<String>, String)>, anyhow::Error> {
+    let row = sqlx::query!(
+        r#"SELECT user_id, password, role FROM users WHERE email = $1"#,
+        email,
+    )
+    .fetch_optional(pool)
+    .await
+    .context("Failed to performed a query to retrieve stored credentials")?
+    .map(|row| (row.user_id, Secret::new(row.password), row.role));
     Ok(row)
 }
 
@@ -72,7 +75,7 @@ pub async fn get_stored_credentials(
 pub async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
-) -> Result<String, AuthError> {
+) -> Result<(uuid::Uuid, String), AuthError> {
     let mut user_id = None;
     let mut expected_password_hash = Secret::new(
         "$argon2id$v=19$m=15000,t=2,p=1$\
@@ -80,12 +83,14 @@ gZiV/M1gPc22ElAH/Jh1Hw$\
 CWOrkoo7oJBQ/iyh7uJ0LO2aLEfrHwTWllSAxT0zRno"
             .to_string(),
     );
+    let mut role = None;
 
-    if let Some((stored_user_id, stored_password_hash)) =
+    if let Some((stored_user_id, stored_password_hash, stored_role)) =
         get_stored_credentials(&credentials.email, pool).await?
     {
         user_id = Some(stored_user_id);
         expected_password_hash = stored_password_hash;
+        role = Some(stored_role);
     }
 
     spawn_blocking_with_tracing(move || {
@@ -95,7 +100,10 @@ CWOrkoo7oJBQ/iyh7uJ0LO2aLEfrHwTWllSAxT0zRno"
     .context("Failed to spawn blocking task")
     .map_err(AuthError::UnexpectedError)??;
 
-    Ok(user_id.expect("Failed to get user id"))
+    Ok((
+        user_id.expect("Failed to get user id"),
+        role.expect("Failed to get user role"),
+    ))
 }
 
 #[tracing::instrument(
@@ -121,7 +129,7 @@ fn verify_password_hash(
 
 #[tracing::instrument(name = "Change password", skip(user_id, password, pool))]
 pub async fn change_password(
-    user_id: String,
+    user_id: uuid::Uuid,
     password: Secret<String>,
     pool: &PgPool,
 ) -> Result<(), anyhow::Error> {
@@ -132,7 +140,7 @@ pub async fn change_password(
         r#"
         UPDATE users
         SET password = $1
-        WHERE id = $2
+        WHERE user_id = $2
         "#,
         password_hash.expose_secret(),
         user_id

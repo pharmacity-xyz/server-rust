@@ -21,7 +21,7 @@ pub async fn get_categories(pool: web::Data<PgPool>) -> Result<HttpResponse, Get
 
     for category in categories.into_iter() {
         let temp_category = Category {
-            id: category.id,
+            id: category.category_id,
             name: category.name,
         };
 

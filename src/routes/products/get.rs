@@ -1,17 +1,6 @@
+use crate::types::product::Product;
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct Product {
-    id: String,
-    name: String,
-    description: String,
-    image_url: String,
-    stock: i32,
-    price: i32,
-    category_id: uuid::Uuid,
-    featured: bool,
-}
 
 pub async fn get_all_products(
     pool: web::Data<PgPool>,
@@ -29,13 +18,13 @@ pub async fn get_all_products(
 
     for product in products.into_iter() {
         let temp_product = Product {
-            id: product.id,
-            name: product.name,
-            description: product.description,
+            product_id: product.product_id,
+            name: product.product_name,
+            description: product.product_description,
             image_url: product.image_url,
             stock: product.stock,
             price: product.price,
-            category_id: product.category_id,
+            category_id: product.category_id.unwrap(),
             featured: product.featured,
         };
 
@@ -58,7 +47,7 @@ impl std::fmt::Display for GetAllProductsError {
 
 #[derive(serde::Deserialize)]
 pub struct ProductId {
-    id: String,
+    id: uuid::Uuid,
 }
 
 pub async fn get_product_by_productid(
@@ -68,7 +57,7 @@ pub async fn get_product_by_productid(
     let product = sqlx::query!(
         r#"
         SELECT * FROM products
-        WHERE id = $1
+        WHERE product_id = $1
         "#,
         product_id.id
     )
@@ -77,13 +66,13 @@ pub async fn get_product_by_productid(
     .map_err(GetAllProductsError)?;
 
     let temp_product = Product {
-        id: product.id,
-        name: product.name,
-        description: product.description,
+        product_id: product.product_id,
+        name: product.product_name,
+        description: product.product_description,
         image_url: product.image_url,
         stock: product.stock,
         price: product.price,
-        category_id: product.category_id,
+        category_id: product.category_id.unwrap(),
         featured: product.featured,
     };
 
@@ -114,13 +103,13 @@ pub async fn get_product_by_categoryid(
 
     for product in products.into_iter() {
         let temp_product = Product {
-            id: product.id,
-            name: product.name,
-            description: product.description,
+            product_id: product.product_id,
+            name: product.product_name,
+            description: product.product_description,
             image_url: product.image_url,
             stock: product.stock,
             price: product.price,
-            category_id: product.category_id,
+            category_id: product.category_id.unwrap(),
             featured: product.featured,
         };
 
@@ -152,18 +141,18 @@ pub async fn search_product(
 
     for product in products.into_iter() {
         if product
-            .name
+            .product_name
             .to_lowercase()
             .contains(word.word.to_lowercase().as_str())
         {
             let temp_product = Product {
-                id: product.id,
-                name: product.name,
-                description: product.description,
+                product_id: product.product_id,
+                name: product.product_name,
+                description: product.product_description,
                 image_url: product.image_url,
                 stock: product.stock,
                 price: product.price,
-                category_id: product.category_id,
+                category_id: product.category_id.unwrap(),
                 featured: product.featured,
             };
             vec_products.push(temp_product);
@@ -190,13 +179,13 @@ pub async fn get_featured_products(
 
     for product in products.into_iter() {
         let temp_product = Product {
-            id: product.id,
-            name: product.name,
-            description: product.description,
+            product_id: product.product_id,
+            name: product.product_name,
+            description: product.product_description,
             image_url: product.image_url,
             stock: product.stock,
             price: product.price,
-            category_id: product.category_id,
+            category_id: product.category_id.unwrap(),
             featured: product.featured,
         };
         vec_products.push(temp_product);

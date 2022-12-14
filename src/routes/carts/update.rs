@@ -1,24 +1,27 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
+use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct Cart {
-    id: uuid::Uuid,
+pub struct UpdateCart {
+    user_id: Uuid,
+    product_id: Uuid,
     quantity: i32,
 }
 
 pub async fn update_cart(
-    cart: web::Json<Cart>,
+    cart: web::Json<UpdateCart>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, UpdateCartError> {
     sqlx::query!(
         r#"
-        UPDATE carts 
+        UPDATE cart_items 
         SET quantity = $1
-        WHERE id = $2
+        WHERE user_id = $2 AND product_id = $3
         "#,
         cart.quantity,
-        cart.id,
+        cart.user_id,
+        cart.product_id,
     )
     .execute(pool.get_ref())
     .await

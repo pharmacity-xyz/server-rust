@@ -1,23 +1,23 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
+use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct Cart {
-    user_id: String,
-    product_id: String,
+pub struct PostCart {
+    user_id: Uuid,
+    product_id: Uuid,
     quantity: i32,
 }
 
 pub async fn post_cart(
-    cart: web::Json<Cart>,
+    cart: web::Json<PostCart>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostCartError> {
     sqlx::query!(
         r#"
-        INSERT INTO carts (id, user_id, product_id, quantity)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO cart_items (user_id, product_id, quantity)
+        VALUES ($1, $2, $3)
         "#,
-        uuid::Uuid::new_v4(),
         cart.user_id,
         cart.product_id,
         cart.quantity,

@@ -1,36 +1,58 @@
-use actix_web::{web, HttpResponse, ResponseError};
+use crate::{
+    authorization::parse_jwt,
+    domain::{UserEmail, UserString},
+    types::user::User, cookie::get_cookie_value,
+};
+use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct User {
-    id: String,
-    email: String,
-    password: String,
-    first_name: String,
-    last_name: String,
-    city: String,
-    country: String,
-    company_name: String,
-    role: String,
-}
+pub async fn get_all_users(
+    req: HttpRequest,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, GetAllUsersError> {
+    let mut cookie_string: String = String::default();
+    let cookie_header = req.headers().get("cookie");
+    if let Some(v) = cookie_header {
+        cookie_string = String::from(v.to_str().unwrap());
+    }
 
-pub async fn get_all_users(pool: web::Data<PgPool>) -> Result<HttpResponse, GetAllUsersError> {
+    println!("Cookie string {:?}", cookie_string);
+    let mut token: String;
+
+    match get_cookie_value("key", cookie_string) {
+        Some(t) => token = t,
+        None => return Err(GetAllUsersError::AuthorizationError(
+            jsonwebtoken::errors::ErrorKind::InvalidToken.into(),
+        ))
+    };
+
+
+    let (_user_id, role) = parse_jwt(token)?;
+
+    println!("Role {:?}", role);
+
+    if role != "Admin" {
+        return Err(GetAllUsersError::AuthorizationError(
+            jsonwebtoken::errors::ErrorKind::InvalidToken.into(),
+        ));
+    }
+
     let users = sqlx::query!(r#"SELECT * FROM users"#)
         .fetch_all(pool.get_ref())
         .await
-        .map_err(GetAllUsersError)?;
+        .map_err(GetAllUsersError::SqlxError)?;
 
     let mut vec_user = vec![];
     for user in users.into_iter() {
         let temp_user = User {
-            id: user.id,
-            email: user.email,
-            password: user.password,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            city: user.city,
-            country: user.country,
-            company_name: user.company_name,
+            user_id: user.user_id,
+            email: UserEmail::from(user.email),
+            password: UserString::from(user.password),
+            first_name: UserString::from(user.first_name),
+            last_name: UserString::from(user.last_name),
+            city: UserString::from(user.city),
+            country: UserString::from(user.country),
+            company_name: UserString::from(user.company_name),
             role: user.role,
         };
 
@@ -41,12 +63,21 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> Result<HttpResponse, GetA
 }
 
 #[derive(Debug)]
-pub struct GetAllUsersError(sqlx::Error);
+pub enum GetAllUsersError {
+    SqlxError(sqlx::Error),
+    AuthorizationError(jsonwebtoken::errors::Error),
+}
 
 impl ResponseError for GetAllUsersError {}
 
 impl std::fmt::Display for GetAllUsersError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Failed to get users.")
+    }
+}
+
+impl From<jsonwebtoken::errors::Error> for GetAllUsersError {
+    fn from(e: jsonwebtoken::errors::Error) -> Self {
+        Self::AuthorizationError(e)
     }
 }
