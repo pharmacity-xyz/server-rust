@@ -2,6 +2,7 @@ use crate::{
     authorization::parse_jwt,
     cookie::get_cookie_value,
     domain::{UserEmail, UserString},
+    response::ServiceResponse,
     types::user::User,
 };
 use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
@@ -11,6 +12,8 @@ pub async fn get_all_users(
     req: HttpRequest,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, GetAllUsersError> {
+    let mut res = ServiceResponse::new(Vec::<User>::new());
+
     let mut cookie_string: String = String::default();
     let cookie_header = req.headers().get("cookie");
     if let Some(v) = cookie_header {
@@ -58,7 +61,10 @@ pub async fn get_all_users(
         vec_user.push(temp_user);
     }
 
-    Ok(HttpResponse::Ok().json(vec_user))
+    res.data = vec_user;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(Debug)]
