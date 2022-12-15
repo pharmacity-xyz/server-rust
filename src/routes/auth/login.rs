@@ -41,7 +41,7 @@ pub async fn login(
             res.success = true;
 
             Ok(HttpResponse::Ok()
-                .insert_header(("Set-Cookie", cookie.to_string()))
+                .insert_header(("Set-Cookie", cookie))
                 .json(res))
         }
         Err(e) => {

@@ -1,7 +1,8 @@
 use crate::{
     authorization::parse_jwt,
+    cookie::get_cookie_value,
     domain::{UserEmail, UserString},
-    types::user::User, cookie::get_cookie_value,
+    types::user::User,
 };
 use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
 use sqlx::PgPool;
@@ -16,20 +17,18 @@ pub async fn get_all_users(
         cookie_string = String::from(v.to_str().unwrap());
     }
 
-    println!("Cookie string {:?}", cookie_string);
     let mut token: String;
 
     match get_cookie_value("key", cookie_string) {
         Some(t) => token = t,
-        None => return Err(GetAllUsersError::AuthorizationError(
-            jsonwebtoken::errors::ErrorKind::InvalidToken.into(),
-        ))
+        None => {
+            return Err(GetAllUsersError::AuthorizationError(
+                jsonwebtoken::errors::ErrorKind::InvalidToken.into(),
+            ))
+        }
     };
 
-
     let (_user_id, role) = parse_jwt(token)?;
-
-    println!("Role {:?}", role);
 
     if role != "Admin" {
         return Err(GetAllUsersError::AuthorizationError(

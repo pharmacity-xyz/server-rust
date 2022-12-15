@@ -26,10 +26,6 @@ pub fn create_jwt(user_id: Uuid, role: String) -> String {
         .expect("")
         .as_secs();
 
-    // let exp_time = get_current_timestamp()
-    //     .checked_add(chrono::Duration::hours(5))
-    //     .expect("Fail to add 5 hours");
-
     let claims = Claims {
         user_id,
         role,
@@ -48,10 +44,6 @@ pub fn parse_jwt(token: String) -> Result<(Uuid, String), Error> {
     let key = b"secret";
 
     let validation = Validation::new(Algorithm::HS256);
-
-    // if validation.validate_exp {
-    //     return Err(ErrorKind::ExpiredSignature.into());
-    // }
 
     let token_data = match decode::<Claims>(&token, &DecodingKey::from_secret(key), &validation) {
         Ok(c) => c,
