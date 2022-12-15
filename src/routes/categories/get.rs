@@ -1,6 +1,8 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
+use crate::response::ServiceResponse;
+
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Category {
     id: uuid::Uuid,
@@ -8,6 +10,8 @@ pub struct Category {
 }
 
 pub async fn get_categories(pool: web::Data<PgPool>) -> Result<HttpResponse, GetCategoriesError> {
+    let mut res = ServiceResponse::new(Vec::<Category>::new());
+
     let categories = sqlx::query!(
         r#"
         SELECT * FROM categories
@@ -28,7 +32,10 @@ pub async fn get_categories(pool: web::Data<PgPool>) -> Result<HttpResponse, Get
         vec_categories.push(temp_category);
     }
 
-    Ok(HttpResponse::Ok().json(vec_categories))
+    res.data = vec_categories;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(Debug)]

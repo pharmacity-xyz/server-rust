@@ -1,5 +1,8 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
+use uuid::Uuid;
+
+use crate::response::ServiceResponse;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct UpdateCategory {
@@ -11,6 +14,8 @@ pub async fn update_category(
     category: web::Json<UpdateCategory>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, UpdateCategoryError> {
+    let mut res = ServiceResponse::new(Uuid::default());
+
     sqlx::query!(
         r#"
         UPDATE categories 
@@ -23,7 +28,11 @@ pub async fn update_category(
     .execute(pool.get_ref())
     .await
     .map_err(UpdateCategoryError)?;
-    Ok(HttpResponse::Ok().finish())
+
+    res.data = category.category_id;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(Debug)]
