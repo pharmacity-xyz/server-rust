@@ -17,7 +17,7 @@ pub async fn get_all_users(
         cookie_string = String::from(v.to_str().unwrap());
     }
 
-    let mut token: String;
+    let token: String;
 
     match get_cookie_value("key", cookie_string) {
         Some(t) => token = t,

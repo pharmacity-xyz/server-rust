@@ -16,7 +16,6 @@ pub struct RequestProduct {
 #[derive(Debug)]
 pub enum PostProductError {
     DatabaseError(sqlx::Error),
-    // StripeInsertionError(StripeError),
 }
 
 impl ResponseError for PostProductError {}
@@ -31,7 +30,6 @@ pub async fn post_product(
     product: web::Json<RequestProduct>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostProductError> {
-    // let new_product = insert_product_to_stripe(&product).await?;
     insert_product_to_db(Uuid::new_v4(), &product, pool).await?;
     Ok(HttpResponse::Ok().json(""))
 }
@@ -60,25 +58,3 @@ async fn insert_product_to_db(
 
     Ok(())
 }
-
-// async fn insert_product_to_stripe(
-//     product: &web::Json<RequestProduct>,
-// ) -> Result<Product, PostProductError> {
-//     let secret_key = std::env::var("STRIPE_SECRET_KEY").expect("Missing STRIPE_SECRET_KEY in env");
-//     let client = Client::new(secret_key);
-
-//     let product = {
-//         let mut create_product = CreateProduct::new(product.name.as_str());
-//         create_product.description = Some(product.description.as_str());
-//         create_product.images = Some(vec![product.image_url.clone()]);
-//         create_product.metadata = Some(
-//             [("async-stripe".to_string(), "true".to_string())]
-//                 .iter()
-//                 .cloned()
-//                 .collect(),
-//         );
-//         Product::create(&client, create_product).await.unwrap()
-//     };
-
-//     Ok(product)
-// }
