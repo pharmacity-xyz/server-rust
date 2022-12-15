@@ -1,10 +1,12 @@
-use crate::types::product::Product;
+use crate::{response::ServiceResponse, types::product::Product};
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
 pub async fn get_all_products(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, GetAllProductsError> {
+    let mut res = ServiceResponse::new(Vec::<Product>::new());
+
     let products = sqlx::query!(
         r#"
         SELECT * FROM products
@@ -31,7 +33,10 @@ pub async fn get_all_products(
         vec_products.push(temp_product);
     }
 
-    Ok(HttpResponse::Ok().json(vec_products))
+    res.data = vec_products;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(Debug)]
