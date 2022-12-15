@@ -1,41 +1,58 @@
-use actix_web::{web, HttpResponse, ResponseError};
+use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
 use sqlx::PgPool;
-use uuid::Uuid;
 
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct Cart {
-    user_id: Uuid,
-    product_id: Uuid,
-    quantity: i32,
-}
+use crate::{
+    authorization::parse_jwt,
+    response::{CartItemWithProduct, ServiceResponse},
+};
 
-pub async fn get_all_carts(pool: web::Data<PgPool>) -> Result<HttpResponse, GetAllCartsError> {
+pub async fn get_all_carts(
+    req: HttpRequest,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, GetAllCartsError> {
+    let mut res = ServiceResponse::new(Vec::<CartItemWithProduct>::new());
+
+    let (user_id, _role) = parse_jwt(&req).map_err(GetAllCartsError::JwtError)?;
+
     let carts = sqlx::query!(
         r#"
-        SELECT * FROM cart_items
-        "#
+        SELECT products.product_id, product_name, image_url, price, quantity
+        FROM cart_items
+        JOIN products ON
+        products.product_id = cart_items.product_id
+        WHERE user_id = $1
+        "#,
+        user_id
     )
     .fetch_all(pool.get_ref())
     .await
-    .map_err(GetAllCartsError)?;
+    .map_err(GetAllCartsError::SqlxError)?;
 
     let mut vec_carts = vec![];
 
     for cart in carts.into_iter() {
-        let temp_cart = Cart {
-            user_id: cart.user_id,
+        let temp_cart = CartItemWithProduct {
             product_id: cart.product_id,
+            product_name: cart.product_name,
+            image_url: cart.image_url,
+            price: cart.price,
             quantity: cart.quantity,
         };
 
         vec_carts.push(temp_cart);
     }
 
-    Ok(HttpResponse::Ok().json(vec_carts))
+    res.data = vec_carts;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(Debug)]
-pub struct GetAllCartsError(sqlx::Error);
+pub enum GetAllCartsError {
+    SqlxError(sqlx::Error),
+    JwtError(jsonwebtoken::errors::Error),
+}
 
 impl ResponseError for GetAllCartsError {}
 
