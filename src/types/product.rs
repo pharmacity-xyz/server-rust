@@ -12,3 +12,18 @@ pub struct Product {
     pub category_id: uuid::Uuid,
     pub featured: bool,
 }
+
+impl Product {
+    pub fn new() -> Self {
+        Product {
+            product_id: Uuid::default(),
+            name: "".to_string(),
+            description: "".to_string(),
+            image_url: "".to_string(),
+            stock: i32::default(),
+            price: BigDecimal::default(),
+            category_id: Uuid::default(),
+            featured: false,
+        }
+    }
+}

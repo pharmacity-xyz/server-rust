@@ -1,4 +1,4 @@
-use crate::request::RequestProduct;
+use crate::{request::RequestProduct, response::ServiceResponse};
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -20,12 +20,20 @@ pub async fn post_product(
     product: web::Json<RequestProduct>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostProductError> {
-    insert_product_to_db(Uuid::new_v4(), &product, pool).await?;
-    Ok(HttpResponse::Ok().json(""))
+    let mut res = ServiceResponse::new(Uuid::default());
+
+    let product_id = Uuid::new_v4();
+
+    insert_product_to_db(&product_id, &product, pool).await?;
+
+    res.data = product_id;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 async fn insert_product_to_db(
-    product_id: Uuid,
+    product_id: &Uuid,
     product: &web::Json<RequestProduct>,
     pool: web::Data<PgPool>,
 ) -> Result<(), PostProductError> {

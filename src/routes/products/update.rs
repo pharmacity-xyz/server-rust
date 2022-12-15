@@ -1,4 +1,4 @@
-use crate::{types::product::Product, response::ServiceResponse};
+use crate::{response::ServiceResponse, types::product::Product};
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -27,7 +27,7 @@ pub async fn update_product(
     res.data = product.product_id;
     res.success = true;
 
-    Ok(HttpResponse::Ok().json(""))
+    Ok(HttpResponse::Ok().json(res))
 }
 
 async fn update_product_for_db(
@@ -55,4 +55,3 @@ async fn update_product_for_db(
 
     Ok(())
 }
-
