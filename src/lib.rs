@@ -1,6 +1,7 @@
 pub mod authentication;
 pub mod authorization;
 pub mod configuration;
+pub mod cookie;
 pub mod domain;
 pub mod request;
 pub mod response;
@@ -9,4 +10,3 @@ pub mod startup;
 pub mod telemetry;
 pub mod types;
 pub mod util;
-pub mod cookie;
