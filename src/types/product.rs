@@ -4,8 +4,8 @@ use uuid::Uuid;
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Product {
     pub product_id: Uuid,
-    pub name: String,
-    pub description: String,
+    pub product_name: String,
+    pub product_description: String,
     pub image_url: String,
     pub stock: i32,
     pub price: BigDecimal,
@@ -17,8 +17,8 @@ impl Product {
     pub fn new() -> Self {
         Product {
             product_id: Uuid::default(),
-            name: "".to_string(),
-            description: "".to_string(),
+            product_name: "".to_string(),
+            product_description: "".to_string(),
             image_url: "".to_string(),
             stock: i32::default(),
             price: BigDecimal::default(),

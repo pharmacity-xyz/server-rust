@@ -86,23 +86,26 @@ async fn run(
             .route("/auth/register", web::post().to(post_user))
             .route("/auth/login", web::post().to(login))
             .route("/auth/change_password", web::post().to(change_password))
-            .route("/users", web::get().to(get_all_users))
-            .route("/users", web::put().to(update_user))
-            .route("/categories", web::post().to(post_category))
-            .route("/categories", web::get().to(get_categories))
-            .route("/categories", web::put().to(update_category))
-            .route("/products", web::post().to(post_product))
-            .route("/products", web::get().to(get_all_products))
-            .route("/products/product", web::get().to(get_product_by_productid))
+            .route("/user", web::get().to(get_all_users))
+            .route("/user", web::put().to(update_user))
+            .route("/category", web::post().to(post_category))
+            .route("/category", web::get().to(get_categories))
+            .route("/category", web::put().to(update_category))
+            .route("/product", web::post().to(post_product))
+            .route("/product", web::get().to(get_all_products))
             .route(
-                "/products/category",
+                "/product/product",
+                web::get().to(get_product_by_productid),
+            )
+            .route(
+                "/product/category",
                 web::get().to(get_product_by_categoryid),
             )
-            .route("/products/featured", web::get().to(get_featured_products))
-            .route("/products/search", web::get().to(search_product))
-            .route("/products", web::put().to(update_product))
-            .route("/carts", web::post().to(post_cart))
-            .route("/carts", web::get().to(get_all_carts))
+            .route("/product/featured", web::get().to(get_featured_products))
+            .route("/product/search", web::get().to(search_product))
+            .route("/product", web::put().to(update_product))
+            .route("/cart/add", web::post().to(post_cart))
+            .route("/cart", web::get().to(get_all_carts))
             .route("/carts", web::put().to(update_cart))
             .route("/orders", web::post().to(post_order))
             .app_data(db_pool.clone())

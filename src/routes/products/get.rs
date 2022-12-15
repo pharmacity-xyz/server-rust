@@ -21,8 +21,8 @@ pub async fn get_all_products(
     for product in products.into_iter() {
         let temp_product = Product {
             product_id: product.product_id,
-            name: product.product_name,
-            description: product.product_description,
+            product_name: product.product_name,
+            product_description: product.product_description,
             image_url: product.image_url,
             stock: product.stock,
             price: product.price,
@@ -74,8 +74,8 @@ pub async fn get_product_by_productid(
 
     let temp_product = Product {
         product_id: product.product_id,
-        name: product.product_name,
-        description: product.product_description,
+        product_name: product.product_name,
+            product_description: product.product_description,
         image_url: product.image_url,
         stock: product.stock,
         price: product.price,
@@ -116,8 +116,8 @@ pub async fn get_product_by_categoryid(
     for product in products.into_iter() {
         let temp_product = Product {
             product_id: product.product_id,
-            name: product.product_name,
-            description: product.product_description,
+            product_name: product.product_name,
+            product_description: product.product_description,
             image_url: product.image_url,
             stock: product.stock,
             price: product.price,
@@ -164,8 +164,8 @@ pub async fn search_product(
         {
             let temp_product = Product {
                 product_id: product.product_id,
-                name: product.product_name,
-                description: product.product_description,
+                product_name: product.product_name,
+            product_description: product.product_description,
                 image_url: product.image_url,
                 stock: product.stock,
                 price: product.price,
@@ -202,8 +202,8 @@ pub async fn get_featured_products(
     for product in products.into_iter() {
         let temp_product = Product {
             product_id: product.product_id,
-            name: product.product_name,
-            description: product.product_description,
+            product_name: product.product_name,
+            product_description: product.product_description,
             image_url: product.image_url,
             stock: product.stock,
             price: product.price,

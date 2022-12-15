@@ -40,8 +40,8 @@ async fn update_product_for_db(
         SET product_name = $1, product_description = $2, image_url = $3, stock = $4, price = $5, category_id = $6, featured = $7
         WHERE product_id = $8
         "#,
-        product.name,
-        product.description,
+        product.product_name,
+        product.product_description,
         product.image_url,
         product.stock,
         product.price,
