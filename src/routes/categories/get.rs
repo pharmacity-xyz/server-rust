@@ -1,13 +1,7 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
-use crate::response::ServiceResponse;
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct Category {
-    id: uuid::Uuid,
-    name: String,
-}
+use crate::{response::ServiceResponse, types::category::Category};
 
 pub async fn get_categories(pool: web::Data<PgPool>) -> Result<HttpResponse, GetCategoriesError> {
     let mut res = ServiceResponse::new(Vec::<Category>::new());
@@ -25,7 +19,7 @@ pub async fn get_categories(pool: web::Data<PgPool>) -> Result<HttpResponse, Get
 
     for category in categories.into_iter() {
         let temp_category = Category {
-            id: category.category_id,
+            category_id: category.category_id,
             name: category.name,
         };
 
