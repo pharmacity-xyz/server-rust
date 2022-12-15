@@ -1,9 +1,12 @@
 use std::time::SystemTime;
 
+use actix_web::HttpRequest;
 use jsonwebtoken::errors::{Error, ErrorKind};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::cookie::get_cookie_value;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -40,7 +43,19 @@ pub fn create_jwt(user_id: Uuid, role: String) -> String {
     token
 }
 
-pub fn parse_jwt(token: String) -> Result<(Uuid, String), Error> {
+pub fn parse_jwt(req: &HttpRequest) -> Result<(Uuid, String), Error> {
+    let mut cookie_string: String = String::default();
+    let cookie_header = req.headers().get("cookie");
+    if let Some(v) = cookie_header {
+        cookie_string = String::from(v.to_str().unwrap());
+    }
+
+    let token: String;
+
+    match get_cookie_value("key", cookie_string) {
+        Some(t) => token = t,
+        None => return Err(ErrorKind::InvalidToken.into()),
+    };
     let key = b"secret";
 
     let validation = Validation::new(Algorithm::HS256);

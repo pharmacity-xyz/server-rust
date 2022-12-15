@@ -1,18 +1,14 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
-use uuid::Uuid;
 
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct UpdateCart {
-    user_id: Uuid,
-    product_id: Uuid,
-    quantity: i32,
-}
+use crate::{types::Cart, response::ServiceResponse};
 
 pub async fn update_cart(
-    cart: web::Json<UpdateCart>,
+    cart: web::Json<Cart>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, UpdateCartError> {
+    let mut res = ServiceResponse::new(Cart::default());
+
     sqlx::query!(
         r#"
         UPDATE cart_items 
@@ -26,7 +22,11 @@ pub async fn update_cart(
     .execute(pool.get_ref())
     .await
     .map_err(UpdateCartError)?;
-    Ok(HttpResponse::Ok().finish())
+
+    res.data = cart.into();
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(Debug)]

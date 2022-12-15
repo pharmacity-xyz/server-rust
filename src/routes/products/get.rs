@@ -1,10 +1,12 @@
-use crate::types::product::Product;
+use crate::{response::ServiceResponse, types::product::Product};
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
 pub async fn get_all_products(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, GetAllProductsError> {
+    let mut res = ServiceResponse::new(Vec::<Product>::new());
+
     let products = sqlx::query!(
         r#"
         SELECT * FROM products
@@ -31,7 +33,10 @@ pub async fn get_all_products(
         vec_products.push(temp_product);
     }
 
-    Ok(HttpResponse::Ok().json(vec_products))
+    res.data = vec_products;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(Debug)]
@@ -54,6 +59,8 @@ pub async fn get_product_by_productid(
     pool: web::Data<PgPool>,
     product_id: web::Query<ProductId>,
 ) -> Result<HttpResponse, GetAllProductsError> {
+    let mut res = ServiceResponse::new(Product::new());
+
     let product = sqlx::query!(
         r#"
         SELECT * FROM products
@@ -76,7 +83,10 @@ pub async fn get_product_by_productid(
         featured: product.featured,
     };
 
-    Ok(HttpResponse::Ok().json(temp_product))
+    res.data = temp_product;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(serde::Deserialize)]
@@ -88,6 +98,8 @@ pub async fn get_product_by_categoryid(
     pool: web::Data<PgPool>,
     category_id: web::Query<CategoryId>,
 ) -> Result<HttpResponse, GetAllProductsError> {
+    let mut res = ServiceResponse::new(Vec::<Product>::new());
+
     let products = sqlx::query!(
         r#"
         SELECT * FROM products
@@ -116,7 +128,10 @@ pub async fn get_product_by_categoryid(
         vec_products.push(temp_product);
     }
 
-    Ok(HttpResponse::Ok().json(vec_products))
+    res.data = vec_products;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(serde::Deserialize)]
@@ -128,6 +143,8 @@ pub async fn search_product(
     pool: web::Data<PgPool>,
     word: web::Query<SearchString>,
 ) -> Result<HttpResponse, GetAllProductsError> {
+    let mut res = ServiceResponse::new(Vec::<Product>::new());
+
     let products = sqlx::query!(
         r#"
         SELECT * FROM products
@@ -159,12 +176,17 @@ pub async fn search_product(
         }
     }
 
-    Ok(HttpResponse::Ok().json(vec_products))
+    res.data = vec_products;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 pub async fn get_featured_products(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, GetAllProductsError> {
+    let mut res = ServiceResponse::new(Vec::<Product>::new());
+
     let products = sqlx::query!(
         r#"
         SELECT * FROM products
@@ -191,5 +213,8 @@ pub async fn get_featured_products(
         vec_products.push(temp_product);
     }
 
-    Ok(HttpResponse::Ok().json(vec_products))
+    res.data = vec_products;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
 }

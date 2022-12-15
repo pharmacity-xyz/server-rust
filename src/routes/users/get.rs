@@ -1,6 +1,5 @@
 use crate::{
     authorization::parse_jwt,
-    cookie::get_cookie_value,
     domain::{UserEmail, UserString},
     response::ServiceResponse,
     types::user::User,
@@ -14,24 +13,7 @@ pub async fn get_all_users(
 ) -> Result<HttpResponse, GetAllUsersError> {
     let mut res = ServiceResponse::new(Vec::<User>::new());
 
-    let mut cookie_string: String = String::default();
-    let cookie_header = req.headers().get("cookie");
-    if let Some(v) = cookie_header {
-        cookie_string = String::from(v.to_str().unwrap());
-    }
-
-    let token: String;
-
-    match get_cookie_value("key", cookie_string) {
-        Some(t) => token = t,
-        None => {
-            return Err(GetAllUsersError::AuthorizationError(
-                jsonwebtoken::errors::ErrorKind::InvalidToken.into(),
-            ))
-        }
-    };
-
-    let (_user_id, role) = parse_jwt(token)?;
+    let (_user_id, role) = parse_jwt(&req)?;
 
     if role != "Admin" {
         return Err(GetAllUsersError::AuthorizationError(
