@@ -29,5 +29,8 @@ pub fn get_cookie_value(_key: &str, cookie_string: String) -> Option<String> {
 }
 
 pub fn set_cookie(token: &str) -> Cookie {
-    Cookie::build("token", token).secure(true).http_only(true).finish()
+    Cookie::build("token", token)
+        .secure(true)
+        .http_only(true)
+        .finish()
 }

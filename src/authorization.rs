@@ -1,12 +1,9 @@
-
-use actix_web::{HttpRequest, cookie::Cookie};
+use actix_web::HttpRequest;
+use chrono::Utc;
 use jsonwebtoken::errors::{Error, ErrorKind};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::Utc;
-
-use crate::cookie::get_cookie_value;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -20,17 +17,10 @@ const BEARER: &str = "Bearer ";
 pub fn create_jwt(user_id: Uuid, role: String) -> String {
     let key = b"secret";
 
-    // let now = SystemTime::now();
-
     let expiration = Utc::now()
         .checked_add_signed(chrono::Duration::seconds(5 * 60 * 60)) // 5 hours
         .expect("Fail to add 5 hours")
         .timestamp();
-
-    // let exp_time = add_hours
-    //     .duration_since(std::time::UNIX_EPOCH)
-    //     .expect("")
-    //     .as_secs();
 
     let claims = Claims {
         user_id,
@@ -38,31 +28,22 @@ pub fn create_jwt(user_id: Uuid, role: String) -> String {
         exp: expiration as usize,
     };
 
-    let token = match encode(&Header::default(), &claims, &EncodingKey::from_secret(key)) {
+    match encode(&Header::default(), &claims, &EncodingKey::from_secret(key)) {
         Ok(t) => t,
         Err(_) => panic!(),
-    };
-
-    token
+    }
 }
 
 pub fn parse_jwt(req: &HttpRequest) -> Result<(Uuid, String), Error> {
-    // let cookie_string: String = String::default();
     let header = match req.headers().get("Authorization") {
-       Some(v) => v,
-       None => return Err(ErrorKind::MissingRequiredClaim("".to_string()).into()),
+        Some(v) => v,
+        None => return Err(ErrorKind::MissingRequiredClaim("".to_string()).into()),
     };
     let auth_header = match std::str::from_utf8(header.as_bytes()) {
         Ok(v) => v,
         Err(_e) => return Err(ErrorKind::MissingRequiredClaim("".to_string()).into()),
     };
 
-    // println!("Cookie string: {:?}", cookie_string);
-
-    // let token = match get_cookie_value("key", cookie_string) {
-    //     Some(t) => t,
-    //     None => return Err(ErrorKind::InvalidToken.into()),
-    // };
     if !auth_header.starts_with(BEARER) {
         return Err(ErrorKind::InvalidKeyFormat.into());
     }
