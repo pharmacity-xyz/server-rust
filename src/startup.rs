@@ -2,7 +2,7 @@ use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::{
         auth::{change_password::change_password, login::login},
-        carts::{get_all_carts, post_cart, update_cart, delete_cart},
+        carts::{delete_cart, get_all_carts, post_cart, update_cart},
         categories::{get_categories, post_category, update_category},
         health_check, post_order,
         products::{

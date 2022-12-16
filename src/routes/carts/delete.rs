@@ -1,8 +1,8 @@
-use actix_web::{web, HttpResponse, HttpRequest, ResponseError};
+use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{response::ServiceResponse, authorization::parse_jwt};
+use crate::{authorization::parse_jwt, response::ServiceResponse};
 
 pub async fn delete_cart(
     req: HttpRequest,
@@ -14,7 +14,7 @@ pub async fn delete_cart(
 
     let (user_id, _role) = parse_jwt(&req).map_err(DeleteCartError::JwtError)?;
 
-   sqlx::query!(
+    sqlx::query!(
         r#"
         DELETE FROM cart_items
         WHERE product_id = $1 AND user_id = $2

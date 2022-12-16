@@ -1,39 +1,38 @@
 {
   "db": "PostgreSQL",
-  "045f3e802f0abfa66b9e2f174b8e51033dd127449b4b214df03b592b8d05d9f2": {
+  "0a34dbafaab0571c90be60f1240971ae4ed13bc38ab71d13767a713d73688045": {
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
         "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Int4",
-          "Int4",
           "Uuid",
-          "Bool",
-          "Text"
+          "Text",
+          "Text",
+          "Text",
+          "Int4",
+          "Numeric",
+          "Uuid"
         ]
       }
     },
-    "query": "\n        UPDATE products \n        SET name = $1, description = $2, image_url = $3, stock = $4, price = $5, category_id = $6, featured = $7\n        WHERE id = $8\n        "
+    "query": "\n        INSERT INTO products (product_id, product_name, product_description, image_url, stock, price, category_id, featured)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, false)\n        "
   },
   "0c05d33c6cc481201b0ba4a6d2d1475a0e6f58aaed7418ed2ec46f95e3a9cadd": {
     "describe": {
       "columns": [
         {
-          "name": "id",
+          "name": "product_id",
           "ordinal": 0,
-          "type_info": "Text"
+          "type_info": "Uuid"
         },
         {
-          "name": "name",
+          "name": "product_name",
           "ordinal": 1,
           "type_info": "Text"
         },
         {
-          "name": "description",
+          "name": "product_description",
           "ordinal": 2,
           "type_info": "Text"
         },
@@ -50,7 +49,7 @@
         {
           "name": "price",
           "ordinal": 5,
-          "type_info": "Int4"
+          "type_info": "Numeric"
         },
         {
           "name": "featured",
@@ -71,7 +70,7 @@
         false,
         false,
         false,
-        false
+        true
       ],
       "parameters": {
         "Left": [
@@ -81,39 +80,31 @@
     },
     "query": "\n        SELECT * FROM products\n        WHERE category_id = $1\n        "
   },
-  "15b8091460bcc16b37f6ada4d75bdf5655f8d5b31ef1dfce123c29cc85207476": {
+  "2215ebeb1d1121d8dd1920a5ab8479d04af2c294bcd43f693581a42e1c43a040": {
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
         "Left": [
           "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
           "Uuid"
         ]
       }
     },
-    "query": "\n        UPDATE categories \n        SET name = $1\n        WHERE id = $2\n        "
-  },
-  "179cab66e74d3c576a8e68193d4b47863181007a0149e3f1d8635edc4cc658d3": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Text"
-        ]
-      }
-    },
-    "query": "\n        INSERT INTO categories (id, name)\n        VALUES ($1, $2)\n        "
+    "query": "\n        UPDATE users\n        SET email = $1, first_name = $2, last_name = $3, city = $4, country = $5, company_name = $6\n        WHERE user_id = $7\n        "
   },
   "26e7e05427bc7dabcd7815d27764fda2baf4cfe60a2d2d6ee2a1f773dccbbce2": {
     "describe": {
       "columns": [
         {
-          "name": "id",
+          "name": "user_id",
           "ordinal": 0,
-          "type_info": "Text"
+          "type_info": "Uuid"
         },
         {
           "name": "email",
@@ -173,7 +164,78 @@
     },
     "query": "SELECT * FROM users"
   },
-  "2a8770f732c26684ffba8306bd73829760a2fd1e5436aaaa5470dfa963930961": {
+  "28db006092a28216d681f1f1a8578a8d56f0bec948c114ab75500d43fe39464e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n        UPDATE categories \n        SET name = $1\n        WHERE category_id = $2\n        "
+  },
+  "2b104e3ff9bcf7a73dae60d63db68da12e738d6a7902cad93622ae3cf661632e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Int4"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO cart_items (user_id, product_id, quantity)\n        VALUES ($1, $2, $3)\n        "
+  },
+  "385bc538be9b3ec8bc3afa8c947aec63ab485a77f3e10dad500b97e2d92e9a06": {
+    "describe": {
+      "columns": [
+        {
+          "name": "product_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "product_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "image_url",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "price",
+          "ordinal": 3,
+          "type_info": "Numeric"
+        },
+        {
+          "name": "quantity",
+          "ordinal": 4,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n        SELECT products.product_id, product_name, image_url, price, quantity\n        FROM cart_items\n        JOIN products ON\n        products.product_id = cart_items.product_id\n        WHERE user_id = $1\n        "
+  },
+  "417ff8de9f4fd90635d98a8928902ab6746e44dd86a734972c6ff86267ed7aee": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -182,50 +244,44 @@
           "Text",
           "Text",
           "Text",
-          "Text",
           "Int4",
-          "Int4",
+          "Numeric",
+          "Uuid",
+          "Bool",
           "Uuid"
         ]
       }
     },
-    "query": "\n        INSERT INTO products (id, name, description, image_url, stock, price, category_id, featured)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, false)\n        "
+    "query": "\n        UPDATE products \n        SET product_name = $1, product_description = $2, image_url = $3, stock = $4, price = $5, category_id = $6, featured = $7\n        WHERE product_id = $8\n        "
   },
-  "4560c237741ce9d4166aecd669770b3360a3ac71e649b293efb88d92c3254068": {
+  "433abe0c16c9d696a065bdc08f1ae00e1d6e6ef97dd38aa117630adf64d0275a": {
     "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false
-      ],
+      "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
-          "Text"
+          "Uuid",
+          "Uuid"
         ]
       }
     },
-    "query": "SELECT id FROM users WHERE email = $1"
+    "query": "\n        DELETE FROM cart_items\n        WHERE product_id = $1 AND user_id = $2\n        "
   },
-  "4df5037b7bf205eddb7e147a0085001f9e2d14302170a62866c27041099627a7": {
+  "476bf3fef3b15bfd786f6fc7756e2b7c1a84fe871c05a49cd9384d58d4b95f12": {
     "describe": {
       "columns": [
         {
-          "name": "id",
+          "name": "product_id",
           "ordinal": 0,
-          "type_info": "Text"
+          "type_info": "Uuid"
         },
         {
-          "name": "name",
+          "name": "product_name",
           "ordinal": 1,
           "type_info": "Text"
         },
         {
-          "name": "description",
+          "name": "product_description",
           "ordinal": 2,
           "type_info": "Text"
         },
@@ -242,7 +298,7 @@
         {
           "name": "price",
           "ordinal": 5,
-          "type_info": "Int4"
+          "type_info": "Numeric"
         },
         {
           "name": "featured",
@@ -263,7 +319,69 @@
         false,
         false,
         false,
-        false
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n        SELECT * FROM products\n        WHERE product_id = $1\n        "
+  },
+  "4df5037b7bf205eddb7e147a0085001f9e2d14302170a62866c27041099627a7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "product_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "product_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "product_description",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "image_url",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "price",
+          "ordinal": 5,
+          "type_info": "Numeric"
+        },
+        {
+          "name": "featured",
+          "ordinal": 6,
+          "type_info": "Bool"
+        },
+        {
+          "name": "category_id",
+          "ordinal": 7,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
       ],
       "parameters": {
         "Left": []
@@ -271,108 +389,82 @@
     },
     "query": "\n        SELECT * FROM products\n        WHERE featured = true\n        "
   },
-  "50369eb64e40bf4422b38555aa06275e501e62b8494f1472bd67c177cbf1fce7": {
+  "5424885a63d39715d7a958c254d768d9b548b724ff177e72cdcd1a0cc792fbe9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO users (user_id, email, password, first_name, last_name, city, country, company_name, role)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) \n        RETURNING user_id\n        "
+  },
+  "6e09392db3b0718ad90c65ab1146244c76602c6935bd9f6f5c6457a61aad967b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n        UPDATE users\n        SET password = $1\n        WHERE user_id = $2\n        "
+  },
+  "7e6c43a9155d17e78c3eff427b5349df8912850646f43d90f73ef210f4e49f35": {
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
+          "Uuid",
           "Uuid"
         ]
       }
     },
-    "query": "\n        UPDATE carts \n        SET quantity = $1\n        WHERE id = $2\n        "
+    "query": "\n        UPDATE cart_items \n        SET quantity = $1\n        WHERE user_id = $2 AND product_id = $3\n        "
   },
-  "8c94b5e5408e8853b094ce4616cbde21d80feec77bba8192deacdbbd289a305b": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "\n        UPDATE users\n        SET email = $1, first_name = $2, last_name = $3, city = $4, country = $5, company_name = $6\n        WHERE id = $7\n        "
-  },
-  "afe655a76e216527814d756e8878e607243adb46b915622b289dca8c049dcdc4": {
+  "9cd7e2164e55500c66435bd55f5707907bd90c2a792c373e76a62eef4f8110b5": {
     "describe": {
       "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
         {
           "name": "user_id",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "product_id",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "quantity",
-          "ordinal": 3,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "\n        SELECT * FROM carts\n        "
-  },
-  "b1af6249738490c07587d81eb19f8a8e6b813ba85d8c4bc0c3eb630d3397e903": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "\n        INSERT INTO users (id, email, password, first_name, last_name, city, country, company_name, role)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n        "
-  },
-  "b3de938995c744adfb9171880990e92f295faf8618cf0f5650d91c9067be6821": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
           "ordinal": 0,
-          "type_info": "Text"
+          "type_info": "Uuid"
         },
         {
           "name": "password",
           "ordinal": 1,
           "type_info": "Text"
+        },
+        {
+          "name": "role",
+          "ordinal": 2,
+          "type_info": "Text"
         }
       ],
       "nullable": [
+        false,
         false,
         false
       ],
@@ -382,23 +474,36 @@
         ]
       }
     },
-    "query": "SELECT id, password FROM users WHERE email = $1"
+    "query": "SELECT user_id, password, role FROM users WHERE email = $1"
+  },
+  "b0d88fceed6f2b1c6e850cf801fa8bf41fd9919865f33d441d117f9e53e238ad": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO categories (category_id, name)\n        VALUES ($1, $2)\n        "
   },
   "bef64242607078e6265b584b8b9e226c8c6edc9c7dc47dfdc7b9dd7987aef0fa": {
     "describe": {
       "columns": [
         {
-          "name": "id",
+          "name": "product_id",
           "ordinal": 0,
-          "type_info": "Text"
+          "type_info": "Uuid"
         },
         {
-          "name": "name",
+          "name": "product_name",
           "ordinal": 1,
           "type_info": "Text"
         },
         {
-          "name": "description",
+          "name": "product_description",
           "ordinal": 2,
           "type_info": "Text"
         },
@@ -415,7 +520,7 @@
         {
           "name": "price",
           "ordinal": 5,
-          "type_info": "Int4"
+          "type_info": "Numeric"
         },
         {
           "name": "featured",
@@ -436,7 +541,7 @@
         false,
         false,
         false,
-        false
+        true
       ],
       "parameters": {
         "Left": []
@@ -444,88 +549,11 @@
     },
     "query": "\n        SELECT * FROM products\n        "
   },
-  "bf4d15e67e60f1277ac9bbfbba92bc6f8f7d3b5ee9f03a279b8fc16e193027c3": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Text",
-          "Text",
-          "Int4"
-        ]
-      }
-    },
-    "query": "\n        INSERT INTO carts (id, user_id, product_id, quantity)\n        VALUES ($1, $2, $3, $4)\n        "
-  },
-  "ccfb0534a0575a1fa00bc99bc718804209da6060a03a52e11202f87a6e15e6ca": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Text"
-        },
-        {
-          "name": "name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "description",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "image_url",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "stock",
-          "ordinal": 4,
-          "type_info": "Int4"
-        },
-        {
-          "name": "price",
-          "ordinal": 5,
-          "type_info": "Int4"
-        },
-        {
-          "name": "featured",
-          "ordinal": 6,
-          "type_info": "Bool"
-        },
-        {
-          "name": "category_id",
-          "ordinal": 7,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "\n        SELECT * FROM products\n        WHERE id = $1\n        "
-  },
   "e530a61d9eb9939ce9367ff912099d3cc16774a6ac528d0805642dabd1d5e14c": {
     "describe": {
       "columns": [
         {
-          "name": "id",
+          "name": "category_id",
           "ordinal": 0,
           "type_info": "Uuid"
         },
@@ -545,17 +573,24 @@
     },
     "query": "\n        SELECT * FROM categories\n        "
   },
-  "efb0457a3cd638fe2bfac62c4c58bd9e37e420a4ad4e3af477be2c0e611e0695": {
+  "efa7b0d2eed28ce72deb9ab8024f835214692fae36101518a790ebf9f0d4e2f5": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
       "parameters": {
         "Left": [
-          "Text",
           "Text"
         ]
       }
     },
-    "query": "\n        UPDATE users\n        SET password = $1\n        WHERE id = $2\n        "
+    "query": "SELECT user_id FROM users WHERE email = $1"
   }
 }
