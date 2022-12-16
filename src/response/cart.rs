@@ -1,7 +1,7 @@
 use bigdecimal::BigDecimal;
 use uuid::Uuid;
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Default)]
 pub struct CartItemWithProduct {
     pub product_id: Uuid,
     pub product_name: String,

@@ -43,8 +43,8 @@ async fn insert_product_to_db(
         VALUES ($1, $2, $3, $4, $5, $6, $7, false)
         "#,
         product_id,
-        product.name,
-        product.description,
+        product.product_name,
+        product.product_description,
         product.image_url,
         product.stock,
         product.price,

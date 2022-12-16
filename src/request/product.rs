@@ -2,8 +2,8 @@ use bigdecimal::BigDecimal;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct RequestProduct {
-    pub name: String,
-    pub description: String,
+    pub product_name: String,
+    pub product_description: String,
     pub image_url: String,
     pub stock: i32,
     pub price: BigDecimal,

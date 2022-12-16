@@ -1,35 +1,47 @@
-use actix_web::{web, HttpResponse, ResponseError};
+use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
-use crate::{response::ServiceResponse, types::Cart};
+use crate::{
+    authorization::parse_jwt, request::RequestPostCart, response::ServiceResponse, types::Cart,
+};
 
 pub async fn post_cart(
-    cart: web::Json<Cart>,
+    req: HttpRequest,
+    cart: web::Json<RequestPostCart>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostCartError> {
     let mut res = ServiceResponse::new(Cart::default());
+
+    let (user_id, _role) = parse_jwt(&req).map_err(PostCartError::JwtError)?;
 
     sqlx::query!(
         r#"
         INSERT INTO cart_items (user_id, product_id, quantity)
         VALUES ($1, $2, $3)
         "#,
-        cart.user_id,
+        user_id,
         cart.product_id,
         cart.quantity,
     )
     .execute(pool.get_ref())
     .await
-    .map_err(PostCartError)?;
+    .map_err(PostCartError::SqlxError)?;
 
-    res.data = cart.into();
+    res.data = Cart {
+        user_id,
+        product_id: cart.product_id,
+        quantity: cart.quantity,
+    };
     res.success = true;
 
     Ok(HttpResponse::Ok().json(res))
 }
 
 #[derive(Debug)]
-pub struct PostCartError(sqlx::Error);
+pub enum PostCartError {
+    SqlxError(sqlx::Error),
+    JwtError(jsonwebtoken::errors::Error),
+}
 
 impl ResponseError for PostCartError {}
 

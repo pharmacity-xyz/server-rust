@@ -31,10 +31,8 @@ pub async fn update_user(
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, UpdateUserError> {
     let mut res = ServiceResponse::new(Uuid::default());
-    let update_user: User;
-
-    match User::try_from(user) {
-        Ok(u) => update_user = u,
+    let update_user = match User::try_from(user) {
+        Ok(u) => u,
         Err(e) => {
             res.message = e.to_string();
             return Err(UpdateUserError::ValidationError(e.to_string()));

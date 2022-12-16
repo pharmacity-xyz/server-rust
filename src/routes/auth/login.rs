@@ -1,4 +1,3 @@
-use crate::cookie::set_cookie;
 use crate::response::ServiceResponse;
 use crate::util::error_chain_fmt;
 use crate::{
@@ -34,8 +33,6 @@ pub async fn login(
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
 
             let token = create_jwt(user_id, user_role);
-
-            // let cookie = set_cookie(token.as_str());
 
             res.data = token.as_str();
             res.success = true;

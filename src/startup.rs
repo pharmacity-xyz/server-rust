@@ -103,7 +103,7 @@ async fn run(
             .route("/product", web::put().to(update_product))
             .route("/cart/add", web::post().to(post_cart))
             .route("/cart", web::get().to(get_all_carts))
-            .route("/carts", web::put().to(update_cart))
+            .route("/cart/update_quantity", web::put().to(update_cart))
             .route("/orders", web::post().to(post_order))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
