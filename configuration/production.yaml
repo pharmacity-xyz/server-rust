@@ -1,8 +1,8 @@
 application:
   host: 0.0.0.0
 database:
-  host: "dpg-cdd80jg2i3mond6dvmfg-a.singapore-postgres.render.com"
+  host: "dpg-cee3v1ta4997f3l1gvs0-a.singapore-postgres.render.com"
   port: 5432
-  username: "user"
-  password: "bILGkTcNycWH4Y5j2DJ1sAFyTVos6KhM"
-  database_name: "pharmacitydb"
+  username: "pharmacity_rust_user"
+  password: "NGAibKzE0CkOzQ9G6rH1pf0jnKmt5N4X"
+  database_name: "pharmacity_rust"
