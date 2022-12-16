@@ -22,7 +22,7 @@ pub async fn login(
     credential: web::Json<FormData>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, InternalError<LoginError>> {
-    let mut res = ServiceResponse::new(String::default());
+    let mut res = ServiceResponse::new("");
     let credentials = Credentials {
         email: credential.email.clone(),
         password: credential.password.clone(),
@@ -35,14 +35,12 @@ pub async fn login(
 
             let token = create_jwt(user_id, user_role);
 
-            let cookie = set_cookie(token.as_str());
+            // let cookie = set_cookie(token.as_str());
 
-            res.data = token;
+            res.data = token.as_str();
             res.success = true;
 
-            Ok(HttpResponse::Ok()
-                .insert_header(("Set-Cookie", cookie))
-                .json(res))
+            Ok(HttpResponse::Ok().json(res))
         }
         Err(e) => {
             let e = match e {

@@ -7,11 +7,11 @@ pub fn get_cookie_string_from_header(req: HttpRequest) -> Option<String> {
         return Some(String::from(cookie_string));
     }
 
-    return None;
+    None
 }
 
 pub fn get_cookie_value(_key: &str, cookie_string: String) -> Option<String> {
-    let kv: Vec<&str> = cookie_string.split(";").collect();
+    let kv: Vec<&str> = cookie_string.split(';').collect();
     for c in kv {
         match Cookie::parse(c) {
             Ok(kv) => {
@@ -25,10 +25,9 @@ pub fn get_cookie_value(_key: &str, cookie_string: String) -> Option<String> {
         }
     }
 
-    return None;
+    None
 }
 
-pub fn set_cookie(token: &str) -> String {
-    let cookie = Cookie::build("token", token).secure(true).finish();
-    cookie.to_string()
+pub fn set_cookie(token: &str) -> Cookie {
+    Cookie::build("token", token).secure(true).http_only(true).finish()
 }

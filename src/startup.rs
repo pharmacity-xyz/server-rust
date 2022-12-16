@@ -93,10 +93,7 @@ async fn run(
             .route("/category", web::put().to(update_category))
             .route("/product", web::post().to(post_product))
             .route("/product", web::get().to(get_all_products))
-            .route(
-                "/product/product",
-                web::get().to(get_product_by_productid),
-            )
+            .route("/product/product", web::get().to(get_product_by_productid))
             .route(
                 "/product/category",
                 web::get().to(get_product_by_categoryid),

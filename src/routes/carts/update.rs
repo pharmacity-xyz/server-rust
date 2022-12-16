@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
 
-use crate::{types::Cart, response::ServiceResponse};
+use crate::{response::ServiceResponse, types::Cart};
 
 pub async fn update_cart(
     cart: web::Json<Cart>,

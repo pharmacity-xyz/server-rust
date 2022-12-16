@@ -75,7 +75,7 @@ pub async fn get_product_by_productid(
     let temp_product = Product {
         product_id: product.product_id,
         product_name: product.product_name,
-            product_description: product.product_description,
+        product_description: product.product_description,
         image_url: product.image_url,
         stock: product.stock,
         price: product.price,
@@ -165,7 +165,7 @@ pub async fn search_product(
             let temp_product = Product {
                 product_id: product.product_id,
                 product_name: product.product_name,
-            product_description: product.product_description,
+                product_description: product.product_description,
                 image_url: product.image_url,
                 stock: product.stock,
                 price: product.price,
