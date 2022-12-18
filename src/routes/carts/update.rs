@@ -12,22 +12,24 @@ pub async fn update_cart(
 
     let (user_id, _role) = parse_jwt(&req).map_err(UpdateCartError::JwtError)?;
 
-    sqlx::query!(
+    let product_id = sqlx::query!(
         r#"
         UPDATE cart_items 
         SET quantity = $1
         WHERE user_id = $2 AND product_id = $3
+        RETURNING product_id
         "#,
         cart.quantity,
         user_id,
         cart.product_id,
     )
-    .execute(pool.get_ref())
+    .fetch_one(pool.get_ref())
     .await
-    .map_err(UpdateCartError::SqlxError)?;
+    .map_err(UpdateCartError::SqlxError)?
+    .product_id;
 
     res.data = CartItemWithProduct {
-        product_id: cart.product_id,
+        product_id,
         product_name: cart.product_name.clone(),
         image_url: cart.image_url.clone(),
         price: cart.price.clone(),

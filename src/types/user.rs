@@ -1,9 +1,8 @@
 use crate::domain::{UserEmail, UserString};
-use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct User {
-    pub user_id: Uuid,
+    pub user_id: String,
     pub email: UserEmail,
     pub password: UserString,
     pub first_name: UserString,

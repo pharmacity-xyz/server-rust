@@ -3,18 +3,17 @@ use chrono::Utc;
 use jsonwebtoken::errors::{Error, ErrorKind};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    user_id: Uuid,
+    user_id: String,
     role: String,
     exp: usize,
 }
 
 const BEARER: &str = "Bearer ";
 
-pub fn create_jwt(user_id: Uuid, role: String) -> String {
+pub fn create_jwt(user_id: String, role: String) -> String {
     let key = b"secret";
 
     let expiration = Utc::now()
@@ -34,7 +33,7 @@ pub fn create_jwt(user_id: Uuid, role: String) -> String {
     }
 }
 
-pub fn parse_jwt(req: &HttpRequest) -> Result<(Uuid, String), Error> {
+pub fn parse_jwt(req: &HttpRequest) -> Result<(String, String), Error> {
     let header = match req.headers().get("Authorization") {
         Some(v) => v,
         None => return Err(ErrorKind::MissingRequiredClaim("".to_string()).into()),

@@ -1,6 +1,6 @@
 -- Add migration script here
 CREATE TABLE products(
-    product_id uuid PRIMARY KEY,
+    product_id TEXT PRIMARY KEY,
     product_name TEXT NOT NULL,
     product_description TEXT NOT NULL,
     image_url TEXT NOT NULL,

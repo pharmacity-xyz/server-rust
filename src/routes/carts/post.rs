@@ -14,22 +14,24 @@ pub async fn post_cart(
 
     let (user_id, _role) = parse_jwt(&req).map_err(PostCartError::JwtError)?;
 
-    sqlx::query!(
+    let product_id = sqlx::query!(
         r#"
         INSERT INTO cart_items (user_id, product_id, quantity)
         VALUES ($1, $2, $3)
+        RETURNING product_id
         "#,
         user_id,
         cart.product_id,
         cart.quantity,
     )
-    .execute(pool.get_ref())
+    .fetch_one(pool.get_ref())
     .await
-    .map_err(PostCartError::SqlxError)?;
+    .map_err(PostCartError::SqlxError)?
+    .product_id;
 
     res.data = Cart {
         user_id,
-        product_id: cart.product_id,
+        product_id,
         quantity: cart.quantity,
     };
     res.success = true;

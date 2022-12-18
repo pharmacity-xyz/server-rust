@@ -4,7 +4,6 @@ use crate::{
     types::user::User,
 };
 use actix_web::web;
-use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct PostUser {
@@ -29,7 +28,7 @@ impl TryFrom<web::Json<PostUser>> for User {
         }
 
         let new_user = User {
-            user_id: Uuid::new_v4(),
+            user_id: "".to_string(),
             email: UserEmail::parse_with_validation(value.email.clone())?,
             password: UserString::parse_with_validation(value.password.clone())?,
             first_name: UserString::parse_with_validation(value.first_name.clone())?,
@@ -46,7 +45,7 @@ impl TryFrom<web::Json<PostUser>> for User {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct UpdateUser {
-    pub user_id: Uuid,
+    pub user_id: String,
     pub email: String,
     pub first_name: String,
     pub last_name: String,
@@ -60,7 +59,7 @@ impl TryFrom<web::Json<UpdateUser>> for User {
 
     fn try_from(value: web::Json<UpdateUser>) -> Result<Self, Self::Error> {
         let new_user = User {
-            user_id: value.user_id,
+            user_id: value.user_id.to_string(),
             email: UserEmail::parse_with_validation(value.email.clone())?,
             password: UserString::from("".to_string()),
             first_name: UserString::parse_with_validation(value.first_name.clone())?,

@@ -52,7 +52,7 @@ impl std::fmt::Display for GetAllProductsError {
 
 #[derive(serde::Deserialize)]
 pub struct ProductId {
-    id: uuid::Uuid,
+    id: String,
 }
 
 pub async fn get_product_by_productid(

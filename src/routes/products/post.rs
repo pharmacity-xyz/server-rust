@@ -1,6 +1,7 @@
 use crate::{request::RequestProduct, response::ServiceResponse};
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
+use stripe::{Client, CreateProduct, Product};
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -24,7 +25,9 @@ pub async fn post_product(
 
     let product_id = Uuid::new_v4();
 
-    insert_product_to_db(&product_id, &product, pool).await?;
+    let stripe_product = insert_product_to_stripe(&product).await?;
+
+    insert_product_to_db(&stripe_product.id.as_str(), &product, pool).await?;
 
     res.data = product_id;
     res.success = true;
@@ -33,7 +36,7 @@ pub async fn post_product(
 }
 
 async fn insert_product_to_db(
-    product_id: &Uuid,
+    product_id: &str,
     product: &web::Json<RequestProduct>,
     pool: web::Data<PgPool>,
 ) -> Result<(), PostProductError> {
@@ -55,4 +58,26 @@ async fn insert_product_to_db(
     .map_err(PostProductError::DatabaseError)?;
 
     Ok(())
+}
+
+async fn insert_product_to_stripe(
+    product: &web::Json<RequestProduct>,
+) -> Result<Product, PostProductError> {
+    let secret_key = std::env::var("STRIPE_SECRET_KEY").expect("Missing STRIPE_SECRET_KEY in env");
+    let client = Client::new(secret_key);
+
+    let product = {
+        let mut create_product = CreateProduct::new(product.product_name.as_str());
+        create_product.description = Some(product.product_description.as_str());
+        create_product.images = Some(vec![product.image_url.clone()]);
+        create_product.metadata = Some(
+            [("async-stripe".to_string(), "true".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
+        );
+        Product::create(&client, create_product).await.unwrap()
+    };
+
+    Ok(product)
 }

@@ -59,7 +59,7 @@ pub fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::
 pub async fn get_stored_credentials(
     email: &str,
     pool: &PgPool,
-) -> Result<Option<(uuid::Uuid, Secret<String>, String)>, anyhow::Error> {
+) -> Result<Option<(String, Secret<String>, String)>, anyhow::Error> {
     let row = sqlx::query!(
         r#"SELECT user_id, password, role FROM users WHERE email = $1"#,
         email,
@@ -68,6 +68,7 @@ pub async fn get_stored_credentials(
     .await
     .context("Failed to performed a query to retrieve stored credentials")?
     .map(|row| (row.user_id, Secret::new(row.password), row.role));
+
     Ok(row)
 }
 
@@ -75,7 +76,7 @@ pub async fn get_stored_credentials(
 pub async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
-) -> Result<(uuid::Uuid, String), AuthError> {
+) -> Result<(String, String), AuthError> {
     let mut user_id = None;
     let mut expected_password_hash = Secret::new(
         "$argon2id$v=19$m=15000,t=2,p=1$\
@@ -129,7 +130,7 @@ fn verify_password_hash(
 
 #[tracing::instrument(name = "Change password", skip(user_id, password, pool))]
 pub async fn change_password(
-    user_id: uuid::Uuid,
+    user_id: String,
     password: Secret<String>,
     pool: &PgPool,
 ) -> Result<(), anyhow::Error> {

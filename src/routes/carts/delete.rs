@@ -1,12 +1,11 @@
 use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
 use sqlx::PgPool;
-use uuid::Uuid;
 
 use crate::{authorization::parse_jwt, response::ServiceResponse};
 
 pub async fn delete_cart(
     req: HttpRequest,
-    path: web::Path<Uuid>,
+    path: web::Path<String>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, DeleteCartError> {
     let mut res = ServiceResponse::new(true);

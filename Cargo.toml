@@ -38,6 +38,8 @@ actix-session = "0.6"
 dotenv = "0.15.0"
 bigdecimal = { version = "0.3.0", features = ["serde"] }
 jsonwebtoken = "8"
+async-stripe = { version = "0.14", default-features = false, features = ["runtime-async-std-surf", "checkout"] }
+
 
 [dependencies.sqlx]
 version = "0.6"

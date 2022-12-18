@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use uuid::Uuid;
 use validator::validate_email;
 
@@ -49,6 +51,12 @@ impl AsRef<str> for UserEmail {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct UserString(String);
+
+impl Display for UserString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl UserString {
     pub fn parse_with_validation(s: String) -> Result<UserString, String> {

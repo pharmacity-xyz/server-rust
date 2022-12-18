@@ -1,7 +1,6 @@
 use crate::{response::ServiceResponse, types::product::Product};
 use actix_web::{web, HttpResponse, ResponseError};
 use sqlx::PgPool;
-use uuid::Uuid;
 
 #[derive(Debug)]
 pub enum UpdateProductError {
@@ -20,11 +19,11 @@ pub async fn update_product(
     product: web::Json<Product>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, UpdateProductError> {
-    let mut res = ServiceResponse::new(Uuid::default());
+    let mut res = ServiceResponse::new(String::default());
 
-    update_product_for_db(&product, pool).await?;
+    let product_id = update_product_for_db(&product, pool).await?;
 
-    res.data = product.product_id;
+    res.data = product_id;
     res.success = true;
 
     Ok(HttpResponse::Ok().json(res))
@@ -33,12 +32,13 @@ pub async fn update_product(
 async fn update_product_for_db(
     product: &web::Json<Product>,
     pool: web::Data<PgPool>,
-) -> Result<(), UpdateProductError> {
-    sqlx::query!(
+) -> Result<String, UpdateProductError> {
+    let product_id =  sqlx::query!(
         r#"
         UPDATE products 
         SET product_name = $1, product_description = $2, image_url = $3, stock = $4, price = $5, category_id = $6, featured = $7
         WHERE product_id = $8
+        RETURNING product_id
         "#,
         product.product_name,
         product.product_description,
@@ -49,9 +49,10 @@ async fn update_product_for_db(
         product.featured,
         product.product_id,
     )
-    .execute(pool.get_ref())
+    .fetch_one(pool.get_ref())
     .await
-    .map_err(UpdateProductError::DatabaseError)?;
+    .map_err(UpdateProductError::DatabaseError)?
+    .product_id;
 
-    Ok(())
+    Ok(product_id)
 }

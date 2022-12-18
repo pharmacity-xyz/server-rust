@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Product {
-    pub product_id: Uuid,
+    pub product_id: String,
     pub product_name: String,
     pub product_description: String,
     pub image_url: String,
@@ -16,7 +16,7 @@ pub struct Product {
 impl Product {
     pub fn new() -> Self {
         Product {
-            product_id: Uuid::default(),
+            product_id: String::default(),
             product_name: "".to_string(),
             product_description: "".to_string(),
             image_url: "".to_string(),

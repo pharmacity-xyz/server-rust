@@ -5,12 +5,13 @@ use crate::{
 use actix_web::{web, HttpResponse, ResponseError};
 use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
-use uuid::Uuid;
+use stripe::{Client, CreateCustomer, Customer, StripeError};
 
 #[derive(Debug)]
 pub enum PostUserError {
     ValidationError(String),
     DatabaseError(sqlx::Error),
+    StripeInsertionError(StripeError),
 }
 
 impl std::fmt::Display for PostUserError {
@@ -45,15 +46,18 @@ pub async fn post_user(
     user: web::Json<PostUser>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, PostUserError> {
-    let mut res = ServiceResponse::new(Uuid::default());
+    let mut res = ServiceResponse::new(String::default());
 
-    let new_user = match User::try_from(user) {
-        Ok(new_user) => new_user,
+    let mut new_user = match User::try_from(user) {
+        Ok(u) => u,
         Err(e) => {
             res.message = e.to_string();
             return Err(e);
         }
     };
+
+    let customer = insert_user_to_stripe(&new_user).await?;
+    new_user.user_id = customer.id.to_string();
 
     match insert_user_to_db(&pool, &new_user).await {
         Ok(user_id) => {
@@ -67,7 +71,7 @@ pub async fn post_user(
 }
 
 #[tracing::instrument(name = "Saving new user details in the database", skip(user, pool))]
-async fn insert_user_to_db(pool: &PgPool, user: &User) -> Result<Uuid, PostUserError> {
+async fn insert_user_to_db(pool: &PgPool, user: &User) -> Result<String, PostUserError> {
     let hashed_password =
         compute_password_hash(Secret::new(user.password.inner())).expect("Failed to hash");
 
@@ -93,4 +97,34 @@ async fn insert_user_to_db(pool: &PgPool, user: &User) -> Result<Uuid, PostUserE
     .user_id;
 
     Ok(user_id)
+}
+
+#[tracing::instrument(name = "Saving new user details in the stripe", skip(user))]
+async fn insert_user_to_stripe(user: &User) -> Result<Customer, PostUserError> {
+    let secret_key =
+        std::env::var("STRIPE_SECRET_KEY").expect("Can not find stripe secret key in env");
+    let client = Client::new(secret_key);
+    let name = format!("{} {}", user.first_name, user.last_name);
+
+    let customer = Customer::create(
+        &client,
+        CreateCustomer {
+            name: Some(name.as_ref()),
+            email: Some(user.email.as_ref()),
+            description: Some(
+                "A fake customer that is used to illustrate the examples in async-stripe",
+            ),
+            metadata: Some(
+                [("async-stripe".to_string(), "true".to_string())]
+                    .iter()
+                    .cloned()
+                    .collect(),
+            ),
+            ..Default::default()
+        },
+    )
+    .await
+    .map_err(PostUserError::StripeInsertionError)?;
+
+    Ok(customer)
 }

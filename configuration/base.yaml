@@ -4,6 +4,6 @@ application:
 database:
   host: "localhost"
   port: 5432
-  username: "postgres-user"
-  password: "postgres-password"
-  database_name: "postgres-pharmacity-db"
+  username: "user"
+  password: "password"
+  database_name: "pharmacity-db"
