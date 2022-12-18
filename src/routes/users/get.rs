@@ -68,3 +68,15 @@ impl From<jsonwebtoken::errors::Error> for GetAllUsersError {
         Self::AuthorizationError(e)
     }
 }
+
+pub async fn get_user_email(
+    pool: &web::Data<PgPool>,
+    user_id: &str,
+) -> Result<String, sqlx::Error> {
+    let user_email = sqlx::query!(r#"SELECT email FROM users WHERE user_id = $1"#, user_id)
+        .fetch_one(pool.get_ref())
+        .await?
+        .email;
+
+    Ok(user_email)
+}

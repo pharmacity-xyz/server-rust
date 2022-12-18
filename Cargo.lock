@@ -489,10 +489,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71b85eb331f5c2b6ae4ff00aabd20a8a21de88b9890c58579616bf760570b207"
 dependencies = [
  "async-std",
+ "chrono",
+ "hex",
+ "hmac 0.12.1",
  "http-types",
  "serde",
  "serde_json",
  "serde_qs 0.9.2",
+ "sha2 0.10.6",
  "smart-default",
  "smol_str",
  "surf",
@@ -700,6 +704,7 @@ dependencies = [
  "js-sys",
  "num-integer",
  "num-traits",
+ "serde",
  "time 0.1.44",
  "wasm-bindgen",
  "winapi",

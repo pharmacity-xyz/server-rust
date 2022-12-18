@@ -7,6 +7,17 @@ pub async fn get_all_products(
 ) -> Result<HttpResponse, GetAllProductsError> {
     let mut res = ServiceResponse::new(Vec::<Product>::new());
 
+    let vec_products = select_all_products(&pool).await?;
+
+    res.data = vec_products;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
+}
+
+pub async fn select_all_products(
+    pool: &web::Data<PgPool>,
+) -> Result<Vec<Product>, GetAllProductsError> {
     let products = sqlx::query!(
         r#"
         SELECT * FROM products
@@ -33,10 +44,7 @@ pub async fn get_all_products(
         vec_products.push(temp_product);
     }
 
-    res.data = vec_products;
-    res.success = true;
-
-    Ok(HttpResponse::Ok().json(res))
+    Ok(vec_products)
 }
 
 #[derive(Debug)]
