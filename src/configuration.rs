@@ -60,7 +60,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
             configuration_direcotory.join("base.yaml"),
         ))
         .add_source(config::File::from(
-            configuration_direcotory.join(&environment_filename),
+            configuration_direcotory.join(environment_filename),
         ))
         .add_source(
             config::Environment::with_prefix("APP")
