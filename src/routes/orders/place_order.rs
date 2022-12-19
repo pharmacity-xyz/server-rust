@@ -1,16 +1,16 @@
-use actix_web::{web, HttpResponse, ResponseError};
+use actix_web::{web, ResponseError};
 use bigdecimal::{BigDecimal, ToPrimitive};
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::types::{CartItemWithProduct, Order};
+use crate::{response::CartItemWithProduct, types::Order};
 
 pub async fn place_order(
     pool: &web::Data<PgPool>,
     products: Vec<CartItemWithProduct>,
     user_id: String,
-) -> Result<HttpResponse, PlaceOrderError> {
+) -> Result<bool, PlaceOrderError> {
     let mut total_price: i64 = 0;
 
     for product in products.iter() {
@@ -61,7 +61,7 @@ pub async fn place_order(
     .await
     .map_err(PlaceOrderError)?;
 
-    Ok(HttpResponse::Ok().json(""))
+    Ok(true)
 }
 
 #[derive(Debug)]

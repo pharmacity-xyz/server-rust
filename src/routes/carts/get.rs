@@ -14,7 +14,9 @@ pub async fn get_all_carts(
 
     let (user_id, _role) = parse_jwt(&req).map_err(GetAllCartsError::JwtError)?;
 
-    let vec_carts = select_all_carts(&pool, user_id.as_str()).await?;
+    let vec_carts = select_all_carts(&pool, user_id.as_str())
+        .await
+        .map_err(GetAllCartsError::SqlxError)?;
 
     res.data = vec_carts;
     res.success = true;
@@ -25,7 +27,7 @@ pub async fn get_all_carts(
 pub async fn select_all_carts(
     pool: &web::Data<PgPool>,
     user_id: &str,
-) -> Result<Vec<CartItemWithProduct>, GetAllCartsError> {
+) -> Result<Vec<CartItemWithProduct>, sqlx::Error> {
     let carts = sqlx::query!(
         r#"
         SELECT products.product_id, product_name, image_url, price, quantity
@@ -37,8 +39,7 @@ pub async fn select_all_carts(
         user_id
     )
     .fetch_all(pool.get_ref())
-    .await
-    .map_err(GetAllCartsError::SqlxError)?;
+    .await?;
 
     let mut vec_carts = vec![];
 

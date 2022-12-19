@@ -28,7 +28,7 @@ pub async fn checkout(
 
     let carts = select_all_carts(&pool, user_id.as_str())
         .await
-        .map_err(CheckoutError::GetAllCartsError)?;
+        .map_err(CheckoutError::SqlxError)?;
 
     let mut checkout_session_items = vec![];
 

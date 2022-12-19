@@ -80,3 +80,24 @@ pub async fn get_user_email(
 
     Ok(user_email)
 }
+
+pub async fn get_user_by_email(
+    pool: &web::Data<PgPool>,
+    email: String,
+) -> Result<User, sqlx::Error> {
+    let user = sqlx::query!(r#"SELECT * FROM users WHERE email = $1"#, email)
+        .fetch_one(pool.get_ref())
+        .await?;
+
+    Ok(User {
+        user_id: user.user_id,
+        email: UserEmail::from(user.email),
+        password: UserString::from(user.password),
+        first_name: UserString::from(user.first_name),
+        last_name: UserString::from(user.last_name),
+        city: UserString::from(user.city),
+        country: UserString::from(user.country),
+        company_name: UserString::from(user.company_name),
+        role: user.role,
+    })
+}
