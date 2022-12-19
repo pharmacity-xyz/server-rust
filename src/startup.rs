@@ -4,9 +4,8 @@ use crate::{
         auth::{change_password::change_password, login::login},
         carts::{delete_cart, get_all_carts, post_cart, update_cart},
         categories::{get_categories, post_category, update_category},
-        fulfill_order, health_check,
+        fulfill_order, get_all_orders, get_order_details, health_check,
         payment::checkout,
-        post_order,
         products::{
             get_all_products, get_featured_products, get_product_by_categoryid,
             get_product_by_productid, post_product, search_product, update_product,
@@ -110,7 +109,11 @@ async fn run(
             .route("/cart/{product_id}", web::delete().to(delete_cart))
             .route("/payment/checkout", web::post().to(checkout))
             .route("/payment", web::post().to(fulfill_order))
-            .route("/orders", web::post().to(post_order))
+            .route("/order", web::get().to(get_all_orders))
+            .route(
+                "/order/orderid/{order_id}",
+                web::get().to(get_order_details),
+            )
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
