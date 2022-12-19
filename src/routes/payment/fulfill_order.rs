@@ -49,14 +49,11 @@ async fn handle_webhook(
     let secret = "whsec_f805a6ec3cf411e6009bf9223cd93b58d5e462707ebecf9564232d9c3903e169";
 
     if let Ok(event) = Webhook::construct_event(payload_str, stripe_signature, secret) {
-        match event.event_type {
-            EventType::CheckoutSessionCompleted => {
-                if let EventObject::CheckoutSession(session) = event.data.object {
-                    let success = handle_checkout_session(&pool, session).await?;
-                    return Ok(success);
-                }
+        if event.event_type == EventType::CheckoutSessionCompleted {
+            if let EventObject::CheckoutSession(session) = event.data.object {
+                let success = handle_checkout_session(pool, session).await?;
+                return Ok(success);
             }
-            _ => {}
         }
     }
 
@@ -75,11 +72,11 @@ async fn handle_checkout_session(
         .await
         .map_err(FulFillOrderError::SqlxError)?;
 
-    let cart_item_with_products = select_all_carts(&pool, &user.user_id)
+    let cart_item_with_products = select_all_carts(pool, &user.user_id)
         .await
         .map_err(FulFillOrderError::SqlxError)?;
 
-    let success = place_order(&pool, cart_item_with_products, user.user_id)
+    let success = place_order(pool, cart_item_with_products, user.user_id)
         .await
         .map_err(FulFillOrderError::PlaceOrder)?;
 

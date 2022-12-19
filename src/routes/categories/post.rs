@@ -29,7 +29,7 @@ pub async fn post_category(
     .await
     .map_err(PostCategoryError)?;
 
-    res.data = category_id.clone();
+    res.data = category_id;
     res.success = true;
 
     Ok(HttpResponse::Ok().json(res))

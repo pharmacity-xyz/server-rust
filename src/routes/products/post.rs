@@ -27,7 +27,7 @@ pub async fn post_product(
 
     let stripe_product = insert_product_to_stripe(&product).await?;
 
-    insert_product_to_db(&stripe_product.id.as_str(), &product, pool).await?;
+    insert_product_to_db(stripe_product.id.as_str(), &product, pool).await?;
 
     res.data = product_id;
     res.success = true;

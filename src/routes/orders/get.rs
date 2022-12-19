@@ -68,7 +68,10 @@ pub async fn get_order_details(
             order_date: order_de.order_date,
             order_total_price: BigDecimal::from(0),
             order_item_total_price: order_de.total_price.clone(),
-            product_id: order_de.product_id.clone().unwrap_or("".to_string()),
+            product_id: order_de
+                .product_id
+                .clone()
+                .unwrap_or_default(),
             product_name: order_de.product_name.clone(),
             image_url: order_de.image_url.clone(),
             quantity: order_de.quantity,
