@@ -8,7 +8,7 @@ pub struct ServiceResponse<T> {
 impl<T> ServiceResponse<T> {
     pub fn new(data: T) -> Self {
         ServiceResponse {
-            data: data,
+            data,
             success: false,
             message: "".to_string(),
         }

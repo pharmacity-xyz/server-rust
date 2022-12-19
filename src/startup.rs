@@ -68,7 +68,7 @@ async fn run(
 ) -> Result<Server, std::io::Error> {
     let db_pool = Data::new(db_pool);
     let secret_key = Key::from(hmac_secret.expose_secret().as_bytes());
-    let message_store = CookieMessageStore::builder(secret_key.clone()).build();
+    let message_store = CookieMessageStore::builder(secret_key).build();
     let message_framework = FlashMessagesFramework::builder(message_store).build();
     let server = HttpServer::new(move || {
         App::new()

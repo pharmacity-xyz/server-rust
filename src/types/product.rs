@@ -13,6 +13,12 @@ pub struct Product {
     pub featured: bool,
 }
 
+impl Default for Product {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Product {
     pub fn new() -> Self {
         Product {
