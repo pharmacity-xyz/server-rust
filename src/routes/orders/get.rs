@@ -94,6 +94,34 @@ pub async fn get_order_details(
     Ok(HttpResponse::Ok().json(res))
 }
 
+pub async fn get_orders_for_admin(pool: web::Data<PgPool>) -> Result<HttpResponse, GetOrdersError> {
+    let mut res = ServiceResponse::new(Vec::<OrderOverview>::new());
+
+    let order_overviews = sqlx::query!(r#"SELECT orders.order_id, order_date, orders.total_price, product_name, image_url FROM orders
+		JOIN order_items ON order_items.order_id = orders.order_id
+		JOIN products ON products.product_id = order_items.product_id
+		"#).fetch_all(pool.get_ref()).await.map_err(GetOrdersError::SqlxError)?;
+
+    let mut temp_arr = vec![];
+
+    for order_overview in order_overviews {
+        let new_o = OrderOverview {
+            order_id: order_overview.order_id,
+            order_date: order_overview.order_date,
+            total_price: order_overview.total_price,
+            product: order_overview.product_name,
+            product_image_url: order_overview.image_url,
+        };
+
+        temp_arr.push(new_o);
+    }
+
+    res.data = temp_arr;
+    res.success = true;
+
+    Ok(HttpResponse::Ok().json(res))
+}
+
 #[derive(Debug)]
 pub enum GetOrdersError {
     SqlxError(sqlx::Error),

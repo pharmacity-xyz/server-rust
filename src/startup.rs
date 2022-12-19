@@ -4,7 +4,7 @@ use crate::{
         auth::{change_password::change_password, login::login},
         carts::{delete_cart, get_all_carts, post_cart, update_cart},
         categories::{get_categories, post_category, update_category},
-        fulfill_order, get_all_orders, get_order_details, health_check,
+        fulfill_order, get_all_orders, get_order_details, get_orders_for_admin, health_check,
         payment::checkout,
         products::{
             get_all_products, get_featured_products, get_product_by_categoryid,
@@ -114,6 +114,7 @@ async fn run(
                 "/order/orderid/{order_id}",
                 web::get().to(get_order_details),
             )
+            .route("/order/admin", web::get().to(get_orders_for_admin))
             .app_data(db_pool.clone())
             .app_data(Data::new(hmac_secret.clone()))
     })
